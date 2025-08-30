@@ -27,7 +27,7 @@ Turn a fresh Arch installation into a fully-configured, beautiful, and modern so
 █▌▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▐█
 ████████████████████████████████████████████████████████████████
 
-Read more at [osvm.archi](https://osvm.archi).
+Read more at [osvm.archi](http://osvm.archi).
 
 ## ISO Images
 
