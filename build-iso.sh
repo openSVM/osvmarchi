@@ -125,6 +125,13 @@ create_packages_list() {
     
     log_info "Creating custom packages list for $arch"
     
+    # Verify OSVMarchi packages.sh exists
+    if [[ ! -f "$SCRIPT_DIR/install/packages.sh" ]]; then
+        log_error "OSVMarchi packages.sh not found at $SCRIPT_DIR/install/packages.sh"
+        exit 1
+    fi
+    
+    # Start with base system packages
     cat > "$BUILD_DIR/archiso-$arch/packages.x86_64" << 'EOF'
 # Base system
 base
@@ -145,30 +152,23 @@ git
 curl
 wget
 
-# Development tools
-gcc
-make
-cmake
-
-# OSVMarchi core dependencies
-hyprland
-alacritty
-waybar
-nvim
-fastfetch
-btop
-docker
-docker-compose
-nodejs
-npm
-python
-python-pip
-
-# Additional tools
+# Build tools for archiso
 archiso
+
 EOF
     
-    log_success "Custom packages list created"
+    # Add all OSVMarchi packages from install/packages.sh
+    log_info "Adding OSVMarchi packages from install/packages.sh"
+    
+    # Extract package names from install/packages.sh and add them
+    grep -E '^  [a-z]' "$SCRIPT_DIR/install/packages.sh" | sed 's/^  //' | sed 's/ \\$//' | while read -r package; do
+        echo "$package" >> "$BUILD_DIR/archiso-$arch/packages.x86_64"
+    done
+    
+    local total_packages
+    total_packages=$(wc -l < "$BUILD_DIR/archiso-$arch/packages.x86_64")
+    
+    log_success "Custom packages list created with $total_packages packages"
 }
 
 # Configure OSVMarchi integration
