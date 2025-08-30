@@ -172,7 +172,7 @@ jobs:
         nvim
         obs-studio
         pamixer
-        pinta
+        # pinta  # Not available in official Arch repos
         playerctl
         plocate
         plymouth
@@ -193,7 +193,7 @@ jobs:
         tree-sitter-cli
         ttf-cascadia-mono-nerd
         ttf-jetbrains-mono
-        tzupdate
+        # tzupdate  # Not available in official Arch repos
         ufw
         unzip
         waybar
@@ -203,7 +203,7 @@ jobs:
         wl-clipboard
         xmlstarlet
         xournalpp
-        yaru-icon-theme
+        # yaru-icon-theme  # Ubuntu theme, not available in Arch repos
         zoxide
         
         # Additional tools for ISO building

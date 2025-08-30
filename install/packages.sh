@@ -72,7 +72,7 @@ sudo pacman -S --noconfirm --needed \
   obsidian \
   osvmarchi-chromium \
   pamixer \
-  pinta \
+#  pinta \
   playerctl \
   plocate \
   plymouth \
@@ -97,7 +97,7 @@ sudo pacman -S --noconfirm --needed \
   ttf-cascadia-mono-nerd \
   ttf-jetbrains-mono \
   typora \
-  tzupdate \
+#  tzupdate \
   ufw \
   ufw-docker \
   unzip \
@@ -116,6 +116,6 @@ sudo pacman -S --noconfirm --needed \
   xdg-desktop-portal-hyprland \
   xmlstarlet \
   xournalpp \
-  yaru-icon-theme \
+#  yaru-icon-theme \
   yay \
   zoxide
