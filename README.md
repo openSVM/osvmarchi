@@ -126,6 +126,7 @@ The following Solana development tools are installed automatically during OSVMar
 | Tool | Version | Description |
 |------|---------|-------------|
 | **Solana CLI** | v2.3.8 (latest) | Official Solana command-line interface |
+| **OSVM** | latest | Solana Version Manager for switching between versions |
 | **Anchor Framework** | v0.29.0 | Rust framework for Solana program development |
 | **SPL Token CLI** | v4.0.0 | Command-line tools for SPL tokens |
 | **SPL Associated Token Account CLI** | v3.0.2 | Tools for managing associated token accounts |
@@ -142,6 +143,9 @@ solana-keygen new
 
 # Start a local test validator
 solana-test-validator
+
+# Switch to a specific Solana version
+osvm use 1.18.0
 
 # Create a new Anchor project
 anchor init my_solana_project

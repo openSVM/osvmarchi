@@ -40,6 +40,10 @@ if [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]]; then
     export PATH="$HOME/.cargo/bin:$PATH"
 fi
 
+# Install OSVM (Solana Version Manager)
+echo "📦 Installing OSVM (Solana Version Manager)..."
+cargo install osvm --locked --force
+
 # Install Anchor Version Manager and Anchor CLI
 echo "📦 Installing Anchor CLI v0.29.0..."
 if ! command -v avm &> /dev/null; then
@@ -68,6 +72,7 @@ echo -e "\n\e[32m🎉 Solana development environment installed successfully!\e[0
 
 echo "📋 Installed tools and versions:"
 echo "  • Solana CLI: v2.3.8 (latest)"
+echo "  • OSVM (Solana Version Manager): latest"
 echo "  • Anchor Framework: v0.29.0 (managed by AVM)"
 echo "  • SPL Token CLI: v4.0.0"
 echo "  • SPL Associated Token Account CLI: v3.0.2"
@@ -78,6 +83,7 @@ echo ""
 echo "🚀 Quick start commands:"
 echo "  • Create wallet:      solana-keygen new"
 echo "  • Start test validator: solana-test-validator"
+echo "  • Switch Solana version: osvm use <version>"
 echo "  • Create Anchor project: anchor init my_project"
 echo "  • Create SPL token:   spl-token create-token"
 echo "  • Initialize Candy Machine: sugar create-config"
