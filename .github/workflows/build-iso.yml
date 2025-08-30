@@ -53,7 +53,7 @@ jobs:
           dosfstools \
           e2fsprogs \
           erofs-utils \
-          libarchive-tools \
+          libarchive \
           libisoburn \
           mtools \
           btrfs-progs \
