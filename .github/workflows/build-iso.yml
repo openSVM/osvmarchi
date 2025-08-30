@@ -1,0 +1,379 @@
+name: Build OSVMarchi ISO Images
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-iso:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            name: generic-x86_64
+            march: x86-64
+            mtune: generic
+          - arch: amd64
+            name: amd64
+            march: x86-64
+            mtune: generic
+          - arch: zen4
+            name: zen4-optimized
+            march: znver4
+            mtune: znver4
+          - arch: zen5
+            name: zen5-optimized
+            march: znver5
+            mtune: znver5
+          - arch: epyc
+            name: epyc-optimized
+            march: znver2
+            mtune: znver2
+          - arch: threadripper
+            name: threadripper-optimized
+            march: znver3
+            mtune: znver3
+    
+    steps:
+    - name: Setup Arch Linux environment
+      run: |
+        # Update system and install required packages
+        pacman -Syu --noconfirm
+        pacman -S --noconfirm \
+          archiso \
+          git \
+          base-devel \
+          dosfstools \
+          e2fsprogs \
+          erofs-utils \
+          libarchive \
+          libisoburn \
+          mtools \
+          btrfs-progs \
+          squashfs-tools \
+          sudo
+      
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Create OSVMarchi ISO build environment
+      run: |
+        # Create working directory
+        mkdir -p iso-build/archiso-${{ matrix.arch }}
+        cd iso-build
+        
+        # Download archiso profile
+        git clone https://gitlab.archlinux.org/archlinux/archiso.git --depth 1
+        
+        # Verify archiso was cloned successfully
+        if [ ! -d "archiso/configs/releng" ]; then
+          echo "Failed to clone archiso repository or releng config not found"
+          exit 1
+        fi
+        
+        # Copy archiso profile
+        cp -r archiso/configs/releng/* archiso-${{ matrix.arch }}/
+        
+        # Verify profiledef.sh was copied
+        if [ ! -f "archiso-${{ matrix.arch }}/profiledef.sh" ]; then
+          echo "profiledef.sh not found after copy operation"
+          ls -la archiso-${{ matrix.arch }}/
+          exit 1
+        fi
+        
+        # Create custom packages list including OSVMarchi dependencies
+        cat > archiso-${{ matrix.arch }}/packages.x86_64 << 'EOF'
+        # Base system
+        base
+        base-devel
+        linux
+        linux-firmware
+        
+        # Bootloader and filesystem
+        syslinux
+        efibootmgr
+        dosfstools
+        e2fsprogs
+        
+        # Network and utilities
+        networkmanager
+        openssh
+        git
+        curl
+        wget
+        
+        # Development tools
+        gcc
+        make
+        cmake
+        
+        # OSVMarchi complete package set (official repo packages only)
+        alacritty
+        avahi
+        bash-completion
+        bat
+        blueberry
+        brightnessctl
+        btop
+        cargo
+        clang
+        cups
+        cups-browsed
+        cups-filters
+        cups-pdf
+        docker
+        docker-buildx
+        docker-compose
+        dust
+        evince
+        eza
+        fastfetch
+        fcitx5
+        fcitx5-gtk
+        fcitx5-qt
+        fd
+        ffmpegthumbnailer
+        fzf
+        git
+        github-cli
+        gnome-calculator
+        gnome-keyring
+        gnome-themes-extra
+        gvfs-mtp
+        hyprland
+        imagemagick
+        imv
+        inetutils
+        jq
+        kdenlive
+        kvantum-qt5
+        less
+        libqalculate
+        libreoffice
+        llvm
+        luarocks
+        mako
+        man
+        mariadb-libs
+        mpv
+        nautilus
+        noto-fonts
+        noto-fonts-cjk
+        noto-fonts-emoji
+        noto-fonts-extra
+        nss-mdns
+        nvim
+        obs-studio
+        pamixer
+        # pinta  # Not available in official Arch repos
+        playerctl
+        plocate
+        plymouth
+        polkit-gnome
+        postgresql-libs
+        power-profiles-daemon
+        python
+        python-gobject
+        python-pip
+        python-poetry-core
+        ripgrep
+        slurp
+        starship
+        sushi
+        swaybg
+        system-config-printer
+        tldr
+        tree-sitter-cli
+        ttf-cascadia-mono-nerd
+        ttf-jetbrains-mono
+        # tzupdate  # Not available in official Arch repos
+        ufw
+        unzip
+        waybar
+        wf-recorder
+        whois
+        wireplumber
+        wl-clipboard
+        xmlstarlet
+        xournalpp
+        # yaru-icon-theme  # Ubuntu theme, not available in Arch repos
+        zoxide
+        
+        # Additional tools for ISO building
+        archiso
+        EOF
+    
+    - name: Configure OSVMarchi integration
+      run: |
+        cd iso-build/archiso-${{ matrix.arch }}
+        
+        # Create airootfs structure
+        mkdir -p airootfs/etc/systemd/system/multi-user.target.wants
+        mkdir -p airootfs/etc/osvmarchi
+        mkdir -p airootfs/usr/local/bin
+        
+        # Copy OSVMarchi files
+        cp -r ../../* airootfs/etc/osvmarchi/ 2>/dev/null || true
+        
+        # Create OSVMarchi installer service
+        cat > airootfs/etc/systemd/system/osvmarchi-installer.service << 'EOF'
+        [Unit]
+        Description=OSVMarchi Installer Service
+        After=network-online.target
+        Wants=network-online.target
+        
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/local/bin/osvmarchi-auto-install
+        RemainAfterExit=yes
+        StandardOutput=journal
+        
+        [Install]
+        WantedBy=multi-user.target
+        EOF
+        
+        # Create auto-installer script
+        cat > airootfs/usr/local/bin/osvmarchi-auto-install << 'EOF'
+        #!/bin/bash
+        # OSVMarchi Auto Installer for ISO
+        
+        echo "OSVMarchi ISO Image - ${{ matrix.name }}"
+        echo "Architecture: ${{ matrix.arch }}"
+        echo "Compiler flags: -march=${{ matrix.march }} -mtune=${{ matrix.mtune }}"
+        echo
+        echo "This ISO contains OSVMarchi pre-configured for ${{ matrix.arch }} processors."
+        echo "Run 'osvmarchi-install' to begin installation on this system."
+        echo
+        
+        # Make OSVMarchi available
+        if [ -d /etc/osvmarchi ]; then
+          ln -sf /etc/osvmarchi/boot.sh /usr/local/bin/osvmarchi-install
+          chmod +x /usr/local/bin/osvmarchi-install
+        fi
+        EOF
+        
+        chmod +x airootfs/usr/local/bin/osvmarchi-auto-install
+        
+        # Enable the service
+        ln -sf ../osvmarchi-installer.service airootfs/etc/systemd/system/multi-user.target.wants/
+    
+    - name: Configure architecture-specific optimizations
+      run: |
+        cd iso-build/archiso-${{ matrix.arch }}
+        
+        # Create makepkg.conf with architecture optimizations
+        cat > airootfs/etc/makepkg.conf << EOF
+        # Architecture-specific optimizations for ${{ matrix.arch }}
+        CARCH="x86_64"
+        CHOST="x86_64-pc-linux-gnu"
+        
+        # Compiler flags optimized for ${{ matrix.arch }}
+        CFLAGS="-march=${{ matrix.march }} -mtune=${{ matrix.mtune }} -O2 -pipe -fno-plt -fexceptions -Wp,-D_FORTIFY_SOURCE=3 -Wformat -Werror=format-security -fstack-clash-protection -fcf-protection -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer"
+        CXXFLAGS="\$CFLAGS -Wp,-D_GLIBCXX_ASSERTIONS"
+        LDFLAGS="-Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,-z,pack-relative-relocs"
+        LTOFLAGS="-flto=auto"
+        RUSTFLAGS="-C opt-level=2 -C target-cpu=${{ matrix.mtune }}"
+        
+        # Make options
+        MAKEFLAGS="-j\$(nproc)"
+        
+        # Package options
+        OPTIONS=(strip docs !libtool !staticlibs emptydirs zipman purge !debug lto)
+        
+        # Architecture
+        INTEGRITY_CHECK=(sha256)
+        BUILDENV=(!distcc color !ccache check !sign)
+        EOF
+    
+    - name: Customize ISO profile
+      run: |
+        cd iso-build/archiso-${{ matrix.arch }}
+        
+        # Verify profiledef.sh exists before modification
+        if [ ! -f profiledef.sh ]; then
+          echo "profiledef.sh not found. Aborting build."
+          ls -la .
+          exit 1
+        fi
+        
+        # Update profile configuration
+        sed -i "s/iso_name=\"archlinux\"/iso_name=\"osvmarchi-${{ matrix.name }}\"/" profiledef.sh
+        sed -i "s/iso_label=\"ARCH_.*\"/iso_label=\"OSVMARCHI_${{ matrix.arch }}\"/" profiledef.sh
+        sed -i "s|iso_publisher=\"Arch Linux <https://archlinux.org>\"|iso_publisher=\"OSVMarchi <https://osvm.archi>\"|" profiledef.sh
+        sed -i "s|iso_application=\"Arch Linux Live/Rescue DVD\"|iso_application=\"OSVMarchi Live/Install CD - ${{ matrix.name }}\"|" profiledef.sh
+        
+        # Verify modifications were applied
+        echo "Modified profiledef.sh contents:"
+        grep -E "(iso_name|iso_label|iso_publisher|iso_application)" profiledef.sh
+        
+        # Set version
+        echo "$(date +%Y.%m.%d)-${{ matrix.name }}" > airootfs/etc/osvmarchi-version
+    
+    - name: Build ISO image
+      run: |
+        cd iso-build/archiso-${{ matrix.arch }}
+        
+        # Build the ISO with verbose output
+        echo "Building ISO for ${{ matrix.arch }} architecture..."
+        mkarchiso -v -w work -o out . 2>&1 | tee build.log
+        
+        # Check if build was successful
+        if [ ${PIPESTATUS[0]} -ne 0 ]; then
+          echo "ISO build failed!"
+          cat build.log
+          exit 1
+        fi
+        
+        # Verify ISO was created
+        if [ ! -d out ] || [ -z "$(ls out/*.iso 2>/dev/null)" ]; then
+          echo "No ISO file found in output directory!"
+          ls -la out/ || echo "Output directory does not exist"
+          exit 1
+        fi
+        
+        # Get ISO filename
+        ISO_FILE=$(ls out/*.iso | head -1)
+        echo "Built ISO: $ISO_FILE"
+        
+        # Move to predictable location
+        mv "$ISO_FILE" "../osvmarchi-${{ matrix.name }}-$(date +%Y%m%d).iso"
+    
+    - name: Generate checksums
+      run: |
+        cd iso-build
+        ISO_FILE="osvmarchi-${{ matrix.name }}-$(date +%Y%m%d).iso"
+        
+        # Generate checksums
+        sha256sum "$ISO_FILE" > "$ISO_FILE.sha256"
+        md5sum "$ISO_FILE" > "$ISO_FILE.md5"
+        
+        # Display info
+        ls -lh "$ISO_FILE"*
+        echo "SHA256: $(cat $ISO_FILE.sha256)"
+    
+    - name: Upload ISO artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: osvmarchi-iso-${{ matrix.name }}
+        path: |
+          iso-build/osvmarchi-${{ matrix.name }}-*.iso
+          iso-build/osvmarchi-${{ matrix.name }}-*.iso.sha256
+          iso-build/osvmarchi-${{ matrix.name }}-*.iso.md5
+        retention-days: 30
+        compression-level: 0  # ISOs are already compressed
+    
+    - name: Upload build logs
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs-${{ matrix.name }}
+        path: |
+          iso-build/archiso-${{ matrix.arch }}/work/
+        retention-days: 7

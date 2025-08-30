@@ -1,0 +1,110 @@
+#!/bin/bash
+# Validation script for OSVMarchi ISO building workflow
+
+set -e
+
+echo "=== OSVMarchi ISO Building Workflow Validation ==="
+echo
+
+# 1. Validate YAML syntax
+echo "1. Validating GitHub Actions workflow YAML syntax..."
+if command -v python3 &> /dev/null; then
+    python3 -c "import yaml; yaml.safe_load(open('.github/workflows/build-iso.yml'))"
+    echo "✓ YAML syntax is valid"
+else
+    echo "⚠ Python3 not available, skipping YAML validation"
+fi
+echo
+
+# 2. Validate shell scripts syntax
+echo "2. Validating shell scripts syntax..."
+find . -name "*.sh" -type f -exec bash -n {} \;
+echo "✓ All shell scripts have valid syntax"
+echo
+
+# 3. Check workflow matrix architectures
+echo "3. Checking workflow matrix architectures..."
+ARCHITECTURES=(x86_64 amd64 zen4 zen5 epyc threadripper)
+for arch in "${ARCHITECTURES[@]}"; do
+    if grep -q "$arch" .github/workflows/build-iso.yml; then
+        echo "✓ Architecture '$arch' found in workflow matrix"
+    else
+        echo "✗ Architecture '$arch' missing from workflow matrix"
+        exit 1
+    fi
+done
+echo
+
+# 4. Validate package count
+echo "4. Validating package count..."
+PKG_COUNT=$(grep -c "  [a-z]" install/packages.sh)
+echo "Package count: $PKG_COUNT"
+if [ "$PKG_COUNT" -ge 118 ]; then
+    echo "✓ Package count OK (≥118)"
+else
+    echo "✗ Package count too low (<118)"
+    exit 1
+fi
+echo
+
+# 5. Check critical files exist
+echo "5. Checking critical files exist..."
+CRITICAL_FILES=(
+    "boot.sh"
+    "install.sh"
+    "install/packages.sh"
+    "install/preflight/guard.sh"
+    ".github/workflows/build-iso.yml"
+    "docs/ISO_BUILDING.md"
+)
+
+for file in "${CRITICAL_FILES[@]}"; do
+    if [ -f "$file" ]; then
+        echo "✓ $file exists"
+    else
+        echo "✗ $file missing"
+        exit 1
+    fi
+done
+echo
+
+# 6. Validate README has workflow badge
+echo "6. Checking README has workflow status badge..."
+if grep -q "build-iso.yml/badge.svg" README.md; then
+    echo "✓ Workflow status badge found in README.md"
+else
+    echo "✗ Workflow status badge missing from README.md"
+    exit 1
+fi
+echo
+
+# 7. Check documentation
+echo "7. Checking documentation..."
+if grep -q "ISO Images" README.md; then
+    echo "✓ ISO documentation section found in README.md"
+else
+    echo "✗ ISO documentation section missing from README.md"
+    exit 1
+fi
+
+if [ -f "docs/ISO_BUILDING.md" ]; then
+    echo "✓ Detailed ISO building documentation exists"
+else
+    echo "✗ Detailed ISO building documentation missing"
+    exit 1
+fi
+echo
+
+echo "=== All validations passed! ==="
+echo
+echo "The ISO building workflow is ready to use:"
+echo "- 6 architecture variants (x86_64, amd64, zen4, zen5, epyc, threadripper)"
+echo "- Automated builds on push/PR to main branch"
+echo "- ISO artifacts with checksums"
+echo "- Comprehensive documentation"
+echo
+echo "Next steps:"
+echo "1. Push changes to trigger workflow"
+echo "2. Monitor workflow execution in GitHub Actions"
+echo "3. Download ISO artifacts from successful builds"
+echo "4. Test ISOs on target hardware or VMs"

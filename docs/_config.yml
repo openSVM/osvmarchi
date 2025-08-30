@@ -1,0 +1,50 @@
+# GitHub Pages configuration for OSVMarchi
+title: OSVMarchi
+description: "Turn a fresh Arch installation into a fully-configured, beautiful, and modern Solana and web development system based on Hyprland"
+url: "https://opensvm.github.io"
+baseurl: "/osvmarchi"
+
+# GitHub Pages settings
+markdown: kramdown
+highlighter: rouge
+theme: minima
+
+# Plugin settings
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# Collections
+collections:
+  docs:
+    output: true
+    permalink: /:collection/:name/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "docs"
+    values:
+      layout: "default"
+
+# Exclude files from processing
+exclude:
+  - vendor/
+  - .bundle/
+  - .sass-cache/
+  - .jekyll-cache/
+  - gemfiles/
+  - Gemfile
+  - Gemfile.lock
+  - node_modules/
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+
+# Include files that start with dots
+include:
+  - .htaccess
+  - _pages

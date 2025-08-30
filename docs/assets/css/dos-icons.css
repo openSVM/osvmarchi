@@ -1,0 +1,241 @@
+/* DOS-Style Pixel Icons */
+.dos-icon {
+    display: inline-block;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1;
+    width: 16px;
+    height: 16px;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #c0c0c0;
+    background: #008080;
+    color: #ffffff;
+    font-weight: bold;
+    margin-right: 4px;
+}
+
+/* Specific icon styles */
+.dos-icon.home {
+    background: #800000;
+    color: #ffff00;
+}
+
+.dos-icon.home::before {
+    content: "H";
+}
+
+.dos-icon.downloads {
+    background: #000080;
+    color: #00ffff;
+}
+
+.dos-icon.downloads::before {
+    content: "D";
+}
+
+.dos-icon.documentation {
+    background: #008000;
+    color: #ffffff;
+}
+
+.dos-icon.documentation::before {
+    content: "?";
+}
+
+.dos-icon.features {
+    background: #800080;
+    color: #ffff00;
+}
+
+.dos-icon.features::before {
+    content: "*";
+}
+
+.dos-icon.installation {
+    background: #808000;
+    color: #ffffff;
+}
+
+.dos-icon.installation::before {
+    content: "I";
+}
+
+.dos-icon.github {
+    background: #404040;
+    color: #00ff00;
+}
+
+.dos-icon.github::before {
+    content: "G";
+}
+
+.dos-icon.folder {
+    background: #000080;
+    color: #ffff00;
+}
+
+.dos-icon.folder::before {
+    content: "▶";
+}
+
+.dos-icon.content {
+    background: #008080;
+    color: #ffffff;
+}
+
+.dos-icon.content::before {
+    content: "≡";
+}
+
+.dos-icon.iso {
+    background: #800080;
+    color: #00ffff;
+}
+
+.dos-icon.iso::before {
+    content: "©";
+}
+
+.dos-icon.computer {
+    background: #008000;
+    color: #ffffff;
+}
+
+.dos-icon.computer::before {
+    content: "█";
+}
+
+.dos-icon.processor {
+    background: #800000;
+    color: #ffff00;
+}
+
+.dos-icon.processor::before {
+    content: "µ";
+}
+
+.dos-icon.server {
+    background: #000080;
+    color: #00ff00;
+}
+
+.dos-icon.server::before {
+    content: "≣";
+}
+
+.dos-icon.workstation {
+    background: #808000;
+    color: #ffffff;
+}
+
+.dos-icon.workstation::before {
+    content: "╬";
+}
+
+.dos-icon.download {
+    background: #008000;
+    color: #ffff00;
+}
+
+.dos-icon.download::before {
+    content: "↓";
+}
+
+.dos-icon.view {
+    background: #800080;
+    color: #00ffff;
+}
+
+.dos-icon.view::before {
+    content: "○";
+}
+
+/* Action button icons */
+.btn-icon {
+    display: inline-block;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    width: 12px;
+    height: 12px;
+    text-align: center;
+    vertical-align: middle;
+    margin-right: 4px;
+    font-weight: bold;
+}
+
+.btn-icon.download::before {
+    content: "↓";
+}
+
+.btn-icon.github::before {
+    content: "G";
+}
+
+/* Panel title icons */
+.panel-title-icon {
+    display: inline-block;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    width: 12px;
+    height: 12px;
+    text-align: center;
+    vertical-align: middle;
+    margin-right: 4px;
+    font-weight: bold;
+    color: #ffff00;
+}
+
+.panel-title-icon.folder::before {
+    content: "▶";
+}
+
+.panel-title-icon.content::before {
+    content: "≡";
+}
+
+/* ISO grid icons */
+.iso-icon {
+    display: inline-block;
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #c0c0c0;
+    background: #008080;
+    color: #ffffff;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.iso-icon.generic::before {
+    content: "█";
+    color: #00ffff;
+}
+
+.iso-icon.amd::before {
+    content: "A";
+    color: #ff0000;
+}
+
+.iso-icon.zen4::before {
+    content: "4";
+    color: #00ff00;
+}
+
+.iso-icon.zen5::before {
+    content: "5";
+    color: #ffff00;
+}
+
+.iso-icon.epyc::before {
+    content: "E";
+    color: #ff00ff;
+}
+
+.iso-icon.threadripper::before {
+    content: "T";
+    color: #00ffff;
+}
