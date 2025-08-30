@@ -13,9 +13,9 @@ if [[ "$1" == "--skip" ]]; then
     exit 0
 fi
 
-# Install Solana CLI via official installer (pinned version for stability)
-echo "📦 Installing Solana CLI v1.18.26..."
-bash -c "$(curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev)" -- --version v1.18.26
+# Install Solana CLI via official installer (latest version)
+echo "📦 Installing Solana CLI (latest version)..."
+bash -c "$(curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev)"
 
 # Add Solana to PATH for current session
 export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
@@ -67,7 +67,7 @@ cargo install mollusk-cli --version 0.1.0 --locked --force
 echo -e "\n\e[32m🎉 Solana development environment installed successfully!\e[0m\n"
 
 echo "📋 Installed tools and versions:"
-echo "  • Solana CLI: v1.18.26"
+echo "  • Solana CLI: v2.3.8 (latest)"
 echo "  • Anchor Framework: v0.29.0 (managed by AVM)"
 echo "  • SPL Token CLI: v4.0.0"
 echo "  • SPL Associated Token Account CLI: v3.0.2"
