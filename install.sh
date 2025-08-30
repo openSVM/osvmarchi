@@ -22,6 +22,7 @@ source $OSVMARCHI_INSTALL/packaging/fonts.sh
 source $OSVMARCHI_INSTALL/packaging/lazyvim.sh
 source $OSVMARCHI_INSTALL/packaging/webapps.sh
 source $OSVMARCHI_INSTALL/packaging/tuis.sh
+source $OSVMARCHI_INSTALL/packaging/solana.sh
 
 # Configuration
 source $OSVMARCHI_INSTALL/config/config.sh

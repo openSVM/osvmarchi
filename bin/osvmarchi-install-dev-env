@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z "$1" ]]; then
-  echo "Usage: osvmarchi-install-dev-env <ruby|node|bun|go|laravel|symfony|php|python|elixir|phoenix|rust|java|ocaml|dotnet>" >&2
+  echo "Usage: osvmarchi-install-dev-env <ruby|node|bun|go|laravel|symfony|php|python|elixir|phoenix|rust|java|ocaml|dotnet|solana>" >&2
   exit 1
 fi
 
@@ -36,6 +36,75 @@ install_php() {
 install_node() {
   echo -e "Installing Node.js...\n"
   mise use --global node@lts
+}
+
+install_solana() {
+  echo -e "Installing Solana CLI and development tools...\n"
+  
+  # Install Solana CLI via official installer
+  echo "Installing Solana CLI..."
+  bash -c "$(curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev)" -- --version v1.18.18
+  
+  # Add Solana to PATH for current session
+  export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+  
+  # Add Solana to bashrc for future sessions
+  if ! grep -q "solana/install/active_release/bin" "$HOME/.bashrc"; then
+    echo 'export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"' >> "$HOME/.bashrc"
+    echo "Added Solana CLI to PATH."
+  fi
+  
+  # Install Rust (required for Anchor and other tools) if not already installed
+  if ! command -v rustc &> /dev/null; then
+    echo "Installing Rust (required for Solana development)..."
+    bash -c "$(curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs)" -- -y
+    source "$HOME/.cargo/env"
+  fi
+  
+  # Add Cargo to PATH for current session if not already there
+  if [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]]; then
+    export PATH="$HOME/.cargo/bin:$PATH"
+  fi
+  
+  # Install Anchor CLI (pinned version for stability)
+  echo "Installing Anchor CLI..."
+  cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+  avm install 0.29.0
+  avm use 0.29.0
+  
+  # Install SPL Token CLI
+  echo "Installing SPL Token CLI..."
+  cargo install spl-token-cli --version 4.0.0 --locked
+  
+  # Install additional Solana ecosystem tools
+  echo "Installing additional Solana development tools..."
+  
+  # Install Solana Program Library CLI tools
+  cargo install spl-token-cli --version 4.0.0 --locked --force
+  cargo install spl-associated-token-account --version 3.0.2 --locked --force
+  
+  # Install sugar (Metaplex Candy Machine CLI)
+  cargo install sugar-cli --version 2.6.0 --locked --force
+  
+  # Install Mollusk (Solana program testing framework)
+  cargo install mollusk-cli --version 0.1.0 --locked --force
+  
+  echo -e "\nSolana development environment installed successfully!"
+  echo "Installed tools:"
+  echo "  • Solana CLI v1.18.18"
+  echo "  • Anchor Framework v0.29.0 (via AVM)"
+  echo "  • SPL Token CLI v4.0.0"
+  echo "  • SPL Associated Token Account CLI v3.0.2"
+  echo "  • Sugar (Metaplex) CLI v2.6.0"
+  echo "  • Mollusk CLI v0.1.0"
+  echo ""
+  echo "You can now:"
+  echo "  • Create Solana wallets: solana-keygen new"
+  echo "  • Start test validator: solana-test-validator"
+  echo "  • Create Anchor projects: anchor init my_project"
+  echo "  • Deploy SPL tokens: spl-token create-token"
+  echo ""
+  echo "Note: Restart your terminal or run 'source ~/.bashrc' to ensure all tools are in PATH."
 }
 
 case "$1" in
@@ -124,5 +193,8 @@ ocaml)
 dotnet)
   echo -e "Installing .NET...\n"
   mise use --global dotnet@latest
+  ;;
+solana)
+  install_solana
   ;;
 esac
