@@ -125,7 +125,7 @@ The following Solana development tools are installed automatically during OSVMar
 
 | Tool | Version | Description |
 |------|---------|-------------|
-| **Solana CLI** | v1.18.18 | Official Solana command-line interface |
+| **Solana CLI** | v1.18.26 | Official Solana command-line interface |
 | **Anchor Framework** | v0.29.0 | Rust framework for Solana program development |
 | **SPL Token CLI** | v4.0.0 | Command-line tools for SPL tokens |
 | **SPL Associated Token Account CLI** | v3.0.2 | Tools for managing associated token accounts |
