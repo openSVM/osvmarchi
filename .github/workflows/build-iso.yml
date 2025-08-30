@@ -10,6 +10,9 @@ on:
 jobs:
   build-iso:
     runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged
     strategy:
       matrix:
         include:
@@ -39,115 +42,26 @@ jobs:
             mtune: znver3
     
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-      
-    - name: Cache Docker layers
-      uses: actions/cache@v4
-      with:
-        path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ matrix.arch }}-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-buildx-${{ matrix.arch }}-
-          ${{ runner.os }}-buildx-
-    
-    - name: Install dependencies
+    - name: Setup Arch Linux environment
       run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          qemu-user-static \
-          binfmt-support \
-          arch-install-scripts \
+        # Update system and install required packages
+        pacman -Syu --noconfirm
+        pacman -S --noconfirm \
+          archiso \
+          git \
+          base-devel \
           dosfstools \
           e2fsprogs \
           erofs-utils \
           libarchive-tools \
-          libisoburn1 \
+          libisoburn \
           mtools \
-          squashfs-tools
-    
-    - name: Install pacman and archiso
-      run: |
-        # Install required tools
-        sudo apt-get install -y zstd curl
-        
-        # Define multiple reliable Arch Linux mirrors for fallback
-        MIRRORS=(
-          "https://geo.mirror.pkgbuild.com/extra/os/x86_64"
-          "https://mirror.osbeck.com/archlinux/extra/os/x86_64" 
-          "https://mirrors.kernel.org/archlinux/extra/os/x86_64"
-          "https://archlinux.uk.mirror.allworldit.com/archlinux/extra/os/x86_64"
-          "https://america.mirror.pkgbuild.com/extra/os/x86_64"
-        )
-        
-        # Find the latest pacman package dynamically
-        echo "Finding latest pacman package..."
-        PACMAN_PKG=""
-        for mirror in "${MIRRORS[@]}"; do
-          echo "Trying mirror: $mirror"
-          # Get package list and find latest pacman
-          if PACMAN_PKG=$(curl -s "${mirror}/" | grep -o 'pacman-[0-9][^"]*\.pkg\.tar\.zst' | sort -V | tail -1); then
-            if [ -n "$PACMAN_PKG" ]; then
-              echo "Found pacman package: $PACMAN_PKG"
-              # Try to download it
-              if wget -q --spider "${mirror}/${PACMAN_PKG}"; then
-                echo "Successfully verified package exists at: ${mirror}/${PACMAN_PKG}"
-                wget "${mirror}/${PACMAN_PKG}"
-                break
-              fi
-            fi
-          fi
-          echo "Mirror failed, trying next..."
-          PACMAN_PKG=""
-        done
-        
-        # Verify we downloaded a pacman package
-        if [ -z "$PACMAN_PKG" ] || [ ! -f "$PACMAN_PKG" ]; then
-          echo "ERROR: Could not download pacman from any mirror"
-          echo "Tried mirrors: ${MIRRORS[*]}"
-          exit 1
-        fi
-        
-        echo "Successfully downloaded: $PACMAN_PKG"
-        
-        # Extract and install pacman
-        sudo zstd -d "$PACMAN_PKG"
-        PACMAN_TAR="${PACMAN_PKG%.zst}"
-        sudo tar -xf "$PACMAN_TAR" -C /
-        
-        # Configure pacman with multiple mirrors for reliability
-        sudo mkdir -p /etc/pacman.d
-        sudo tee /etc/pacman.conf > /dev/null << 'EOF'
-        [options]
-        Architecture = x86_64
-        CheckSpace
-        SigLevel = Required DatabaseOptional
-        LocalFileSigLevel = Optional
-        
-        [core]
-        Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch
-        Server = https://mirror.osbeck.com/archlinux/$repo/os/$arch
-        Server = https://mirrors.kernel.org/archlinux/$repo/os/$arch
-        Server = https://archlinux.uk.mirror.allworldit.com/archlinux/$repo/os/$arch
-        Server = https://america.mirror.pkgbuild.com/$repo/os/$arch
-        
-        [extra]
-        Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch
-        Server = https://mirror.osbeck.com/archlinux/$repo/os/$arch
-        Server = https://mirrors.kernel.org/archlinux/$repo/os/$arch
-        Server = https://archlinux.uk.mirror.allworldit.com/archlinux/$repo/os/$arch
-        Server = https://america.mirror.pkgbuild.com/$repo/os/$arch
-        EOF
-        
-        # Initialize pacman keyring
-        sudo pacman-key --init
-        sudo pacman-key --populate archlinux
-        
-        # Update package databases and install archiso
-        sudo pacman -Sy --noconfirm archiso
+          btrfs-progs \
+          squashfs-tools \
+          sudo
+      
+    - name: Checkout repository
+      uses: actions/checkout@v4
     
     - name: Create OSVMarchi ISO build environment
       run: |
@@ -200,19 +114,97 @@ jobs:
         make
         cmake
         
-        # OSVMarchi core dependencies (subset of the 118 packages)
-        hyprland
+        # OSVMarchi complete package set (official repo packages only)
         alacritty
-        waybar
-        nvim
-        fastfetch
+        avahi
+        bash-completion
+        bat
+        blueberry
+        brightnessctl
         btop
+        cargo
+        clang
+        cups
+        cups-browsed
+        cups-filters
+        cups-pdf
         docker
+        docker-buildx
         docker-compose
-        nodejs
-        npm
+        dust
+        evince
+        eza
+        fastfetch
+        fcitx5
+        fcitx5-gtk
+        fcitx5-qt
+        fd
+        ffmpegthumbnailer
+        fzf
+        git
+        github-cli
+        gnome-calculator
+        gnome-keyring
+        gnome-themes-extra
+        gvfs-mtp
+        hyprland
+        imagemagick
+        imv
+        inetutils
+        jq
+        kdenlive
+        kvantum-qt5
+        less
+        libqalculate
+        libreoffice
+        llvm
+        luarocks
+        mako
+        man
+        mariadb-libs
+        mpv
+        nautilus
+        noto-fonts
+        noto-fonts-cjk
+        noto-fonts-emoji
+        noto-fonts-extra
+        nss-mdns
+        nvim
+        obs-studio
+        pamixer
+        pinta
+        playerctl
+        plocate
+        plymouth
+        polkit-gnome
+        postgresql-libs
+        power-profiles-daemon
         python
+        python-gobject
         python-pip
+        python-poetry-core
+        ripgrep
+        slurp
+        starship
+        sushi
+        swaybg
+        system-config-printer
+        tldr
+        tree-sitter-cli
+        ttf-cascadia-mono-nerd
+        ttf-jetbrains-mono
+        tzupdate
+        ufw
+        unzip
+        waybar
+        wf-recorder
+        whois
+        wireplumber
+        wl-clipboard
+        xmlstarlet
+        xournalpp
+        yaru-icon-theme
+        zoxide
         
         # Additional tools for ISO building
         archiso
@@ -228,7 +220,7 @@ jobs:
         mkdir -p airootfs/usr/local/bin
         
         # Copy OSVMarchi files
-        cp -r ../../* airootfs/etc/osvmarchi/ || true
+        cp -r ../../* airootfs/etc/osvmarchi/ 2>/dev/null || true
         
         # Create OSVMarchi installer service
         cat > airootfs/etc/systemd/system/osvmarchi-installer.service << 'EOF'
@@ -330,7 +322,7 @@ jobs:
         
         # Build the ISO with verbose output
         echo "Building ISO for ${{ matrix.arch }} architecture..."
-        sudo mkarchiso -v -w work -o out . 2>&1 | tee build.log
+        mkarchiso -v -w work -o out . 2>&1 | tee build.log
         
         # Check if build was successful
         if [ ${PIPESTATUS[0]} -ne 0 ]; then
@@ -351,8 +343,7 @@ jobs:
         echo "Built ISO: $ISO_FILE"
         
         # Move to predictable location
-        sudo mv "$ISO_FILE" "../osvmarchi-${{ matrix.name }}-$(date +%Y%m%d).iso"
-        sudo chown $USER:$USER "../osvmarchi-${{ matrix.name }}-$(date +%Y%m%d).iso"
+        mv "$ISO_FILE" "../osvmarchi-${{ matrix.name }}-$(date +%Y%m%d).iso"
     
     - name: Generate checksums
       run: |
