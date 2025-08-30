@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+
+osvmarchi-snapshot create || [ $? -eq 127 ]
+osvmarchi-update-git
+osvmarchi-migrate
+osvmarchi-update-system-pkgs
+osvmarchi-update-restart
+osvmarchi-restart-waybar # removes update-available icon

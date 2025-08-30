@@ -1,0 +1,4 @@
+#!/bin/bash
+
+osvmarchi-refresh-config hypr/hyprsunset.conf
+osvmarchi-restart-hyprsunset

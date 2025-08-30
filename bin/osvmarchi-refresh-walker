@@ -1,0 +1,4 @@
+#!/bin/bash
+
+osvmarchi-refresh-config walker/config.toml
+osvmarchi-restart-walker

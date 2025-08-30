@@ -7,5 +7,5 @@ if ! command -v walker &>/dev/null; then
   rm -rf ~/.config/wofi
 
   mkdir -p ~/.config/walker
-  cp -r ~/.local/share/omarchy/config/walker/* ~/.config/walker/
+  cp -r ~/.local/share/osvmarchi/config/walker/* ~/.config/walker/
 fi

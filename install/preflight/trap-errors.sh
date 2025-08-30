@@ -2,7 +2,7 @@
 
 # Give people a chance to retry running the installation
 catch_errors() {
-  echo -e "\n\e[31mOmarchy installation failed!\e[0m"
+  echo -e "\n\e[31mOSVMarchi installation failed!\e[0m"
   echo
   echo "This command halted with exit code $?:"
   echo "$BASH_COMMAND"
@@ -24,7 +24,7 @@ catch_errors() {
   echo "    ▀▀▀▀▀▀▀ ▀ ▀ ▀▀▀  ▀ ▀▀▀▀▀▀    "
   echo "                                 "
 
-  echo "You can retry by running: bash ~/.local/share/omarchy/install.sh"
+  echo "You can retry by running: bash ~/.local/share/osvmarchi/install.sh"
 }
 
 trap catch_errors ERR

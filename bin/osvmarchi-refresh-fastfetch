@@ -1,0 +1,3 @@
+#!/bin/bash
+
+osvmarchi-refresh-config fastfetch/config.jsonc

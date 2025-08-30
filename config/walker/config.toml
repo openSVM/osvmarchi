@@ -1,7 +1,7 @@
 close_when_open = true
-theme = "omarchy-default"
+theme = "osvmarchi-default"
 theme_base = []
-theme_location = ["~/.local/share/omarchy/default/walker/themes/"]
+theme_location = ["~/.local/share/osvmarchi/default/walker/themes/"]
 hotreload_theme = true
 force_keyboard_focus = true
 timeout = 60
@@ -38,14 +38,14 @@ hide_category = true
 hidden = true
 
 [[builtins.bookmarks.entries]]
-label = "Omarchy - Github"
-url = "https://github.com/basecamp/omarchy"
-keywords = ["omarchy", "github"]
+label = "OSVMarchi - Github"
+url = "https://github.com/openSVM/osvmarchy"
+keywords = ["osvmarchi", "github"]
 
 [[builtins.bookmarks.entries]]
-label = "Omarchy Manual"
-url = "https://manuals.omamix.org/2/the-omarchy-manual"
-keywords = ["omarchy"]
+label = "OSVMarchi Manual"
+url = "https://manuals.omamix.org/2/the-osvmarchi-manual"
+keywords = ["osvmarchi"]
 
 [builtins.calc]
 name = "Calculator"

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+osvmarchi-refresh-config swayosd/config.toml
+osvmarchi-refresh-config swayosd/style.css
+osvmarchi-restart-swayosd
