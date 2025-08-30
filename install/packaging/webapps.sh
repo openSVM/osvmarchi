@@ -13,3 +13,6 @@ osvmarchi-webapp-install "X" https://x.com/ https://cdn.jsdelivr.net/gh/homarr-l
 osvmarchi-webapp-install "Figma" https://figma.com/ https://www.veryicon.com/download/png/application/app-icon-7/figma-1?s=256
 osvmarchi-webapp-install "Discord" https://discord.com/channels/@me https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/discord.png
 osvmarchi-webapp-install "Zoom" https://app.zoom.us/wc/home https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/zoom.png
+osvmarchi-webapp-install "OSVM" https://osvm.ai https://osvm.ai/favicon.png
+osvmarchi-webapp-install "MAGA Finance" https://maga.finance https://maga.finance/favicon.png
+osvmarchi-webapp-install "OpenSVM P2P" https://p2p.opensvm.com https://p2p.opensvm.com/favicon.png

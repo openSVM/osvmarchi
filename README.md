@@ -115,6 +115,73 @@ See [docs/ISO_BUILDING.md](docs/ISO_BUILDING.md) for detailed documentation.
 
 Choose the most specific architecture that matches your processor for optimal performance.
 
+## Solana Development Environment
+
+OSVMarchi includes a comprehensive Solana development environment with pre-installed tools and pinned versions for deterministic builds.
+
+### Included Solana Tools
+
+The following Solana development tools are installed automatically during OSVMarchi setup:
+
+| Tool | Version | Description |
+|------|---------|-------------|
+| **Solana CLI** | v2.3.8 (latest) | Official Solana command-line interface |
+| **OSVM** | latest | Solana Version Manager for switching between versions |
+| **Anchor Framework** | v0.29.0 | Rust framework for Solana program development |
+| **SPL Token CLI** | v4.0.0 | Command-line tools for SPL tokens |
+| **SPL Associated Token Account CLI** | v3.0.2 | Tools for managing associated token accounts |
+| **Sugar (Metaplex)** | v2.6.0 | Metaplex Candy Machine CLI for NFT projects |
+| **Mollusk** | v0.1.0 | Solana program testing framework |
+
+### Quick Start Commands
+
+After installation, you can immediately start developing with Solana:
+
+```bash
+# Create a new wallet
+solana-keygen new
+
+# Start a local test validator
+solana-test-validator
+
+# Switch to a specific Solana version
+osvm use 1.18.0
+
+# Create a new Anchor project
+anchor init my_solana_project
+
+# Create a new SPL token
+spl-token create-token
+
+# Initialize a Candy Machine project
+sugar create-config
+```
+
+### Manual Installation
+
+If you need to install Solana tools on an existing OSVMarchi system:
+
+```bash
+# Install complete Solana development environment
+osvmarchi-install-dev-env solana
+
+# Or install just the Solana tools
+osvmarchi-install-solana
+```
+
+### Version Management
+
+All Solana tools are pinned to specific versions to ensure reproducible builds and compatibility. The Anchor Framework uses AVM (Anchor Version Manager) for easy version switching:
+
+```bash
+# List available Anchor versions
+avm list
+
+# Install and use a different Anchor version
+avm install 0.30.0
+avm use 0.30.0
+```
+
 ## License
 
 OSVMarchi is released under the [MIT License](https://opensource.org/licenses/MIT).

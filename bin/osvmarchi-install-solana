@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# OSVMarchi Solana Development Tools Installer
+# Installs Solana CLI and essential ecosystem tools
+
+set -e
+
+echo -e "\e[32mInstalling Solana Development Environment\e[0m\n"
+
+# Check if user wants to skip Solana installation
+if [[ "$1" == "--skip" ]]; then
+    echo "Skipping Solana development tools installation."
+    exit 0
+fi
+
+# Install Solana CLI via official installer (latest version)
+echo "📦 Installing Solana CLI (latest version)..."
+bash -c "$(curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev)"
+
+# Add Solana to PATH for current session
+export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
+# Add Solana to bashrc for future sessions if not already there
+if ! grep -q "solana/install/active_release/bin" "$HOME/.bashrc" 2>/dev/null; then
+    echo 'export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"' >> "$HOME/.bashrc"
+    echo "✅ Added Solana CLI to PATH"
+fi
+
+# Ensure Rust is installed (required for most Solana ecosystem tools)
+if ! command -v rustc &> /dev/null; then
+    echo "📦 Installing Rust (required for Solana ecosystem tools)..."
+    bash -c "$(curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs)" -- -y
+    source "$HOME/.cargo/env"
+else
+    echo "✅ Rust already installed"
+fi
+
+# Add Cargo to PATH for current session if not already there
+if [[ ":$PATH:" != *":$HOME/.cargo/bin:"* ]]; then
+    export PATH="$HOME/.cargo/bin:$PATH"
+fi
+
+# Install OSVM (Solana Version Manager)
+echo "📦 Installing OSVM (Solana Version Manager)..."
+cargo install osvm --locked --force
+
+# Install Anchor Version Manager and Anchor CLI
+echo "📦 Installing Anchor CLI v0.29.0..."
+if ! command -v avm &> /dev/null; then
+    cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+fi
+avm install 0.29.0 2>/dev/null || echo "⚠️  Anchor v0.29.0 already installed"
+avm use 0.29.0
+
+# Install SPL Token CLI
+echo "📦 Installing SPL Token CLI v4.0.0..."
+cargo install spl-token-cli --version 4.0.0 --locked --force
+
+# Install SPL Associated Token Account CLI
+echo "📦 Installing SPL Associated Token Account CLI v3.0.2..."
+cargo install spl-associated-token-account --version 3.0.2 --locked --force
+
+# Install Sugar (Metaplex Candy Machine CLI)
+echo "📦 Installing Sugar (Metaplex) CLI v2.6.0..."
+cargo install sugar-cli --version 2.6.0 --locked --force
+
+# Install Mollusk (Solana program testing framework)
+echo "📦 Installing Mollusk CLI v0.1.0..."
+cargo install mollusk-cli --version 0.1.0 --locked --force
+
+echo -e "\n\e[32m🎉 Solana development environment installed successfully!\e[0m\n"
+
+echo "📋 Installed tools and versions:"
+echo "  • Solana CLI: v2.3.8 (latest)"
+echo "  • OSVM (Solana Version Manager): latest"
+echo "  • Anchor Framework: v0.29.0 (managed by AVM)"
+echo "  • SPL Token CLI: v4.0.0"
+echo "  • SPL Associated Token Account CLI: v3.0.2"
+echo "  • Sugar (Metaplex) CLI: v2.6.0"
+echo "  • Mollusk CLI: v0.1.0"
+echo ""
+
+echo "🚀 Quick start commands:"
+echo "  • Create wallet:      solana-keygen new"
+echo "  • Start test validator: solana-test-validator"
+echo "  • Switch Solana version: osvm use <version>"
+echo "  • Create Anchor project: anchor init my_project"
+echo "  • Create SPL token:   spl-token create-token"
+echo "  • Initialize Candy Machine: sugar create-config"
+echo ""
+
+echo "💡 Note: Restart your terminal or run 'source ~/.bashrc' to ensure all tools are in PATH."
