@@ -76,8 +76,23 @@ jobs:
         cd iso-build
         
         # Download archiso profile
-        git clone https://gitlab.archlinux.org/archlinux/archiso.git
-        cp -r archiso/configs/releng archiso-${{ matrix.arch }}
+        git clone https://gitlab.archlinux.org/archlinux/archiso.git --depth 1
+        
+        # Verify archiso was cloned successfully
+        if [ ! -d "archiso/configs/releng" ]; then
+          echo "Failed to clone archiso repository or releng config not found"
+          exit 1
+        fi
+        
+        # Copy archiso profile
+        cp -r archiso/configs/releng/* archiso-${{ matrix.arch }}/
+        
+        # Verify profiledef.sh was copied
+        if [ ! -f "archiso-${{ matrix.arch }}/profiledef.sh" ]; then
+          echo "profiledef.sh not found after copy operation"
+          ls -la archiso-${{ matrix.arch }}/
+          exit 1
+        fi
         
         # Create custom packages list including OSVMarchi dependencies
         cat > archiso-${{ matrix.arch }}/packages.x86_64 << 'EOF'
@@ -209,11 +224,22 @@ jobs:
       run: |
         cd iso-build/archiso-${{ matrix.arch }}
         
+        # Verify profiledef.sh exists before modification
+        if [ ! -f profiledef.sh ]; then
+          echo "profiledef.sh not found. Aborting build."
+          ls -la .
+          exit 1
+        fi
+        
         # Update profile configuration
         sed -i "s/iso_name=\"archlinux\"/iso_name=\"osvmarchi-${{ matrix.name }}\"/" profiledef.sh
         sed -i "s/iso_label=\"ARCH_.*\"/iso_label=\"OSVMARCHI_${{ matrix.arch }}\"/" profiledef.sh
-        sed -i "s/iso_publisher=\"Arch Linux <https:\/\/archlinux.org>\"/iso_publisher=\"OSVMarchi <https:\/\/osvm.archi>\"/" profiledef.sh
-        sed -i "s/iso_application=\"Arch Linux Live\/Rescue CD\"/iso_application=\"OSVMarchi Live\/Install CD - ${{ matrix.name }}\"/" profiledef.sh
+        sed -i "s|iso_publisher=\"Arch Linux <https://archlinux.org>\"|iso_publisher=\"OSVMarchi <https://osvm.archi>\"|" profiledef.sh
+        sed -i "s|iso_application=\"Arch Linux Live/Rescue DVD\"|iso_application=\"OSVMarchi Live/Install CD - ${{ matrix.name }}\"|" profiledef.sh
+        
+        # Verify modifications were applied
+        echo "Modified profiledef.sh contents:"
+        grep -E "(iso_name|iso_label|iso_publisher|iso_application)" profiledef.sh
         
         # Set version
         echo "$(date +%Y.%m.%d)-${{ matrix.name }}" > airootfs/etc/osvmarchi-version

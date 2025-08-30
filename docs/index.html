@@ -20,33 +20,33 @@
             <!-- Left Panel -->
             <div id="left-panel" class="panel">
                 <div class="panel-header">
-                    <span class="panel-title">📁 Navigation</span>
+                    <span class="panel-title"><span class="panel-title-icon folder"></span> Navigation</span>
                     <span class="panel-hotkey">F1</span>
                 </div>
                 <div class="panel-content">
                     <div class="file-list" id="nav-list">
                         <div class="file-item selected" data-target="home" tabindex="0">
-                            <span class="file-icon">🏠</span>
+                            <span class="dos-icon home"></span>
                             <span class="file-name">Home</span>
                         </div>
                         <div class="file-item" data-target="downloads" tabindex="0">
-                            <span class="file-icon">💿</span>
+                            <span class="dos-icon downloads"></span>
                             <span class="file-name">ISO Downloads</span>
                         </div>
                         <div class="file-item" data-target="documentation" tabindex="0">
-                            <span class="file-icon">📚</span>
+                            <span class="dos-icon documentation"></span>
                             <span class="file-name">Documentation</span>
                         </div>
                         <div class="file-item" data-target="features" tabindex="0">
-                            <span class="file-icon">⚡</span>
+                            <span class="dos-icon features"></span>
                             <span class="file-name">Features</span>
                         </div>
                         <div class="file-item" data-target="installation" tabindex="0">
-                            <span class="file-icon">🔧</span>
+                            <span class="dos-icon installation"></span>
                             <span class="file-name">Installation</span>
                         </div>
                         <div class="file-item" data-target="github" tabindex="0">
-                            <span class="file-icon">🐙</span>
+                            <span class="dos-icon github"></span>
                             <span class="file-name">GitHub</span>
                         </div>
                     </div>
@@ -56,7 +56,7 @@
             <!-- Right Panel -->
             <div id="right-panel" class="panel">
                 <div class="panel-header">
-                    <span class="panel-title">📄 Content</span>
+                    <span class="panel-title"><span class="panel-title-icon content"></span> Content</span>
                     <span class="panel-hotkey">F2</span>
                 </div>
                 <div class="panel-content">
@@ -72,11 +72,11 @@
                                 <p>OSVMarchi is an opinionated take on what Solana user Linux can be at its best.</p>
                                 <div class="quick-actions">
                                     <button class="action-btn" onclick="showContent('downloads')">
-                                        <span class="btn-icon">💿</span>
+                                        <span class="btn-icon download"></span>
                                         Download ISO
                                     </button>
                                     <button class="action-btn" onclick="window.open('https://github.com/openSVM/osvmarchi', '_blank')">
-                                        <span class="btn-icon">🐙</span>
+                                        <span class="btn-icon github"></span>
                                         View on GitHub
                                     </button>
                                 </div>
@@ -85,13 +85,13 @@
 
                         <!-- Downloads Content -->
                         <div id="downloads-content" class="content-page">
-                            <h2>💿 ISO Downloads</h2>
+                            <h2><span class="dos-icon downloads"></span> ISO Downloads</h2>
                             <p>Pre-built ISO images optimized for different AMD processor architectures:</p>
                             
                             <div class="iso-grid">
                                 <div class="iso-card">
                                     <div class="iso-header">
-                                        <span class="iso-icon">🖥️</span>
+                                        <span class="iso-icon generic"></span>
                                         <h3>x86_64 Generic</h3>
                                     </div>
                                     <p class="iso-desc">Universal compatibility for all 64-bit processors</p>
@@ -104,7 +104,7 @@
 
                                 <div class="iso-card">
                                     <div class="iso-header">
-                                        <span class="iso-icon">🏎️</span>
+                                        <span class="iso-icon zen4"></span>
                                         <h3>Zen4 Optimized</h3>
                                     </div>
                                     <p class="iso-desc">AMD Ryzen 7000 series, EPYC Genoa (-march=znver4)</p>
@@ -117,7 +117,7 @@
 
                                 <div class="iso-card">
                                     <div class="iso-header">
-                                        <span class="iso-icon">🚀</span>
+                                        <span class="iso-icon zen5"></span>
                                         <h3>Zen5 Optimized</h3>
                                     </div>
                                     <p class="iso-desc">AMD Ryzen 9000 series, EPYC Turin (-march=znver5)</p>
@@ -130,7 +130,7 @@
 
                                 <div class="iso-card">
                                     <div class="iso-header">
-                                        <span class="iso-icon">🏢</span>
+                                        <span class="iso-icon epyc"></span>
                                         <h3>EPYC Server</h3>
                                     </div>
                                     <p class="iso-desc">AMD EPYC Rome/Milan server processors (-march=znver2)</p>
@@ -143,7 +143,7 @@
 
                                 <div class="iso-card">
                                     <div class="iso-header">
-                                        <span class="iso-icon">🎯</span>
+                                        <span class="iso-icon threadripper"></span>
                                         <h3>Threadripper</h3>
                                     </div>
                                     <p class="iso-desc">AMD Threadripper PRO/WX series (-march=znver3)</p>
@@ -156,7 +156,7 @@
 
                                 <div class="iso-card">
                                     <div class="iso-header">
-                                        <span class="iso-icon">💻</span>
+                                        <span class="iso-icon amd"></span>
                                         <h3>AMD64 Baseline</h3>
                                     </div>
                                     <p class="iso-desc">All AMD 64-bit processors baseline optimization</p>
@@ -182,25 +182,25 @@
 
                         <!-- Documentation Content -->
                         <div id="documentation-content" class="content-page">
-                            <h2>📚 Documentation</h2>
+                            <h2><span class="dos-icon documentation"></span> Documentation</h2>
                             <div class="doc-grid">
                                 <div class="doc-card">
-                                    <h3>🔧 Installation Guide</h3>
+                                    <h3><span class="dos-icon installation"></span> Installation Guide</h3>
                                     <p>Complete installation instructions for OSVMarchi</p>
                                     <a href="ISO_BUILDING.md" target="_blank">Read More</a>
                                 </div>
                                 <div class="doc-card">
-                                    <h3>⚙️ Configuration</h3>
+                                    <h3><span class="dos-icon features"></span> Configuration</h3>
                                     <p>Customize your OSVMarchi installation</p>
                                     <a href="https://github.com/openSVM/osvmarchi/tree/main/config" target="_blank">View Configs</a>
                                 </div>
                                 <div class="doc-card">
-                                    <h3>🎨 Themes</h3>
+                                    <h3><span class="dos-icon features"></span> Themes</h3>
                                     <p>Available color themes and customization options</p>
                                     <a href="https://github.com/openSVM/osvmarchi/tree/main/themes" target="_blank">Browse Themes</a>
                                 </div>
                                 <div class="doc-card">
-                                    <h3>🛠️ Utilities</h3>
+                                    <h3><span class="dos-icon installation"></span> Utilities</h3>
                                     <p>Built-in commands and utility scripts</p>
                                     <a href="https://github.com/openSVM/osvmarchi/tree/main/bin" target="_blank">View Commands</a>
                                 </div>
@@ -209,35 +209,35 @@
 
                         <!-- Features Content -->
                         <div id="features-content" class="content-page">
-                            <h2>⚡ Features</h2>
+                            <h2><span class="dos-icon features"></span> Features</h2>
                             <div class="features-grid">
                                 <div class="feature-card">
-                                    <span class="feature-icon">🪟</span>
+                                    <span class="dos-icon computer"></span>
                                     <h3>Hyprland Window Manager</h3>
                                     <p>Modern Wayland compositor with stunning animations and effects</p>
                                 </div>
                                 <div class="feature-card">
-                                    <span class="feature-icon">⚡</span>
+                                    <span class="dos-icon features"></span>
                                     <h3>Solana Development</h3>
                                     <p>Pre-configured environment for Solana and web development</p>
                                 </div>
                                 <div class="feature-card">
-                                    <span class="feature-icon">🎨</span>
+                                    <span class="dos-icon features"></span>
                                     <h3>Beautiful Themes</h3>
                                     <p>Multiple color schemes including Catppuccin, Gruvbox, and Nord</p>
                                 </div>
                                 <div class="feature-card">
-                                    <span class="feature-icon">🛠️</span>
+                                    <span class="dos-icon installation"></span>
                                     <h3>84+ Utility Commands</h3>
                                     <p>Comprehensive set of management and configuration tools</p>
                                 </div>
                                 <div class="feature-card">
-                                    <span class="feature-icon">📦</span>
+                                    <span class="dos-icon downloads"></span>
                                     <h3>118+ Packages</h3>
                                     <p>Carefully curated package selection for development</p>
                                 </div>
                                 <div class="feature-card">
-                                    <span class="feature-icon">🔄</span>
+                                    <span class="dos-icon features"></span>
                                     <h3>Auto-Updates</h3>
                                     <p>Intelligent system update and configuration management</p>
                                 </div>
@@ -246,10 +246,10 @@
 
                         <!-- Installation Content -->
                         <div id="installation-content" class="content-page">
-                            <h2>🔧 Installation</h2>
+                            <h2><span class="dos-icon installation"></span> Installation</h2>
                             <div class="install-methods">
                                 <div class="install-card">
-                                    <h3>💿 ISO Installation (Recommended)</h3>
+                                    <h3><span class="dos-icon downloads"></span> ISO Installation (Recommended)</h3>
                                     <div class="code-block">
                                         <code>
                                             # 1. Download ISO for your architecture<br>
@@ -262,7 +262,7 @@
                                 </div>
                                 
                                 <div class="install-card">
-                                    <h3>🌐 Direct Installation</h3>
+                                    <h3><span class="dos-icon github"></span> Direct Installation</h3>
                                     <div class="code-block">
                                         <code>
                                             # On fresh Arch Linux installation<br>
@@ -286,20 +286,20 @@
 
                         <!-- GitHub Content -->
                         <div id="github-content" class="content-page">
-                            <h2>🐙 GitHub Repository</h2>
+                            <h2><span class="dos-icon github"></span> GitHub Repository</h2>
                             <div class="github-stats">
                                 <div class="stat-card">
-                                    <span class="stat-icon">⭐</span>
+                                    <span class="dos-icon features"></span>
                                     <span class="stat-label">Stars</span>
                                     <span class="stat-value" id="github-stars">-</span>
                                 </div>
                                 <div class="stat-card">
-                                    <span class="stat-icon">🍴</span>
+                                    <span class="dos-icon github"></span>
                                     <span class="stat-label">Forks</span>
                                     <span class="stat-value" id="github-forks">-</span>
                                 </div>
                                 <div class="stat-card">
-                                    <span class="stat-icon">🐛</span>
+                                    <span class="dos-icon documentation"></span>
                                     <span class="stat-label">Issues</span>
                                     <span class="stat-value" id="github-issues">-</span>
                                 </div>

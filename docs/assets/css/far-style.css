@@ -1,4 +1,6 @@
 /* FAR Manager Style CSS */
+@import url('dos-icons.css');
+
 :root {
     --bg-primary: #000080;
     --bg-secondary: #008080;
