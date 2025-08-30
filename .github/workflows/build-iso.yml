@@ -69,6 +69,35 @@ jobs:
           mtools \
           squashfs-tools
     
+    - name: Install pacman and archiso
+      run: |
+        # Install pacman on Ubuntu
+        wget https://mirror.rackspace.com/archlinux/extra/os/x86_64/pacman-6.1.0-3-x86_64.pkg.tar.zst
+        sudo apt-get install -y zstd
+        sudo zstd -d pacman-6.1.0-3-x86_64.pkg.tar.zst
+        sudo tar -xf pacman-6.1.0-3-x86_64.pkg.tar -C /
+        
+        # Configure pacman
+        sudo mkdir -p /etc/pacman.d
+        sudo tee /etc/pacman.conf > /dev/null << 'EOF'
+        [options]
+        Architecture = x86_64
+        CheckSpace
+        
+        [core]
+        Server = https://mirror.rackspace.com/archlinux/$repo/os/$arch
+        
+        [extra]
+        Server = https://mirror.rackspace.com/archlinux/$repo/os/$arch
+        EOF
+        
+        # Initialize pacman keyring
+        sudo pacman-key --init
+        sudo pacman-key --populate archlinux
+        
+        # Install archiso
+        sudo pacman -Sy --noconfirm archiso
+    
     - name: Create OSVMarchi ISO build environment
       run: |
         # Create working directory
