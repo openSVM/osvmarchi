@@ -71,31 +71,82 @@ jobs:
     
     - name: Install pacman and archiso
       run: |
-        # Install pacman on Ubuntu
-        wget https://mirror.rackspace.com/archlinux/extra/os/x86_64/pacman-6.1.0-3-x86_64.pkg.tar.zst
-        sudo apt-get install -y zstd
-        sudo zstd -d pacman-6.1.0-3-x86_64.pkg.tar.zst
-        sudo tar -xf pacman-6.1.0-3-x86_64.pkg.tar -C /
+        # Install required tools
+        sudo apt-get install -y zstd curl
         
-        # Configure pacman
+        # Define multiple reliable Arch Linux mirrors for fallback
+        MIRRORS=(
+          "https://geo.mirror.pkgbuild.com/extra/os/x86_64"
+          "https://mirror.osbeck.com/archlinux/extra/os/x86_64" 
+          "https://mirrors.kernel.org/archlinux/extra/os/x86_64"
+          "https://archlinux.uk.mirror.allworldit.com/archlinux/extra/os/x86_64"
+          "https://america.mirror.pkgbuild.com/extra/os/x86_64"
+        )
+        
+        # Find the latest pacman package dynamically
+        echo "Finding latest pacman package..."
+        PACMAN_PKG=""
+        for mirror in "${MIRRORS[@]}"; do
+          echo "Trying mirror: $mirror"
+          # Get package list and find latest pacman
+          if PACMAN_PKG=$(curl -s "${mirror}/" | grep -o 'pacman-[0-9][^"]*\.pkg\.tar\.zst' | sort -V | tail -1); then
+            if [ -n "$PACMAN_PKG" ]; then
+              echo "Found pacman package: $PACMAN_PKG"
+              # Try to download it
+              if wget -q --spider "${mirror}/${PACMAN_PKG}"; then
+                echo "Successfully verified package exists at: ${mirror}/${PACMAN_PKG}"
+                wget "${mirror}/${PACMAN_PKG}"
+                break
+              fi
+            fi
+          fi
+          echo "Mirror failed, trying next..."
+          PACMAN_PKG=""
+        done
+        
+        # Verify we downloaded a pacman package
+        if [ -z "$PACMAN_PKG" ] || [ ! -f "$PACMAN_PKG" ]; then
+          echo "ERROR: Could not download pacman from any mirror"
+          echo "Tried mirrors: ${MIRRORS[*]}"
+          exit 1
+        fi
+        
+        echo "Successfully downloaded: $PACMAN_PKG"
+        
+        # Extract and install pacman
+        sudo zstd -d "$PACMAN_PKG"
+        PACMAN_TAR="${PACMAN_PKG%.zst}"
+        sudo tar -xf "$PACMAN_TAR" -C /
+        
+        # Configure pacman with multiple mirrors for reliability
         sudo mkdir -p /etc/pacman.d
         sudo tee /etc/pacman.conf > /dev/null << 'EOF'
         [options]
         Architecture = x86_64
         CheckSpace
+        SigLevel = Required DatabaseOptional
+        LocalFileSigLevel = Optional
         
         [core]
-        Server = https://mirror.rackspace.com/archlinux/$repo/os/$arch
+        Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch
+        Server = https://mirror.osbeck.com/archlinux/$repo/os/$arch
+        Server = https://mirrors.kernel.org/archlinux/$repo/os/$arch
+        Server = https://archlinux.uk.mirror.allworldit.com/archlinux/$repo/os/$arch
+        Server = https://america.mirror.pkgbuild.com/$repo/os/$arch
         
         [extra]
-        Server = https://mirror.rackspace.com/archlinux/$repo/os/$arch
+        Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch
+        Server = https://mirror.osbeck.com/archlinux/$repo/os/$arch
+        Server = https://mirrors.kernel.org/archlinux/$repo/os/$arch
+        Server = https://archlinux.uk.mirror.allworldit.com/archlinux/$repo/os/$arch
+        Server = https://america.mirror.pkgbuild.com/$repo/os/$arch
         EOF
         
         # Initialize pacman keyring
         sudo pacman-key --init
         sudo pacman-key --populate archlinux
         
-        # Install archiso
+        # Update package databases and install archiso
         sudo pacman -Sy --noconfirm archiso
     
     - name: Create OSVMarchi ISO build environment
