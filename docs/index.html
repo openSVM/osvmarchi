@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSVMarchi - FAR Manager Style Interface</title>
+    <link rel="stylesheet" href="assets/css/far-style.css">
+    <link rel="icon" type="image/svg+xml" href="../logo.svg">
+</head>
+<body>
+    <div id="far-container">
+        <!-- Header Bar -->
+        <div id="header-bar">
+            <div class="header-title">OSVMarchi v1.0 - Arch Linux Development Environment</div>
+            <div class="header-time" id="current-time"></div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="main-content">
+            <!-- Left Panel -->
+            <div id="left-panel" class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">📁 Navigation</span>
+                    <span class="panel-hotkey">F1</span>
+                </div>
+                <div class="panel-content">
+                    <div class="file-list" id="nav-list">
+                        <div class="file-item selected" data-target="home" tabindex="0">
+                            <span class="file-icon">🏠</span>
+                            <span class="file-name">Home</span>
+                        </div>
+                        <div class="file-item" data-target="downloads" tabindex="0">
+                            <span class="file-icon">💿</span>
+                            <span class="file-name">ISO Downloads</span>
+                        </div>
+                        <div class="file-item" data-target="documentation" tabindex="0">
+                            <span class="file-icon">📚</span>
+                            <span class="file-name">Documentation</span>
+                        </div>
+                        <div class="file-item" data-target="features" tabindex="0">
+                            <span class="file-icon">⚡</span>
+                            <span class="file-name">Features</span>
+                        </div>
+                        <div class="file-item" data-target="installation" tabindex="0">
+                            <span class="file-icon">🔧</span>
+                            <span class="file-name">Installation</span>
+                        </div>
+                        <div class="file-item" data-target="github" tabindex="0">
+                            <span class="file-icon">🐙</span>
+                            <span class="file-name">GitHub</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div id="right-panel" class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">📄 Content</span>
+                    <span class="panel-hotkey">F2</span>
+                </div>
+                <div class="panel-content">
+                    <div id="content-area">
+                        <!-- Home Content -->
+                        <div id="home-content" class="content-page active">
+                            <div class="logo-container">
+                                <pre id="ascii-logo" class="ascii-art"></pre>
+                            </div>
+                            <div class="description">
+                                <h2>Welcome to OSVMarchi</h2>
+                                <p>Turn a fresh Arch installation into a fully-configured, beautiful, and modern Solana and web development system based on Hyprland by running a single command.</p>
+                                <p>OSVMarchi is an opinionated take on what Solana user Linux can be at its best.</p>
+                                <div class="quick-actions">
+                                    <button class="action-btn" onclick="showContent('downloads')">
+                                        <span class="btn-icon">💿</span>
+                                        Download ISO
+                                    </button>
+                                    <button class="action-btn" onclick="window.open('https://github.com/openSVM/osvmarchi', '_blank')">
+                                        <span class="btn-icon">🐙</span>
+                                        View on GitHub
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Downloads Content -->
+                        <div id="downloads-content" class="content-page">
+                            <h2>💿 ISO Downloads</h2>
+                            <p>Pre-built ISO images optimized for different AMD processor architectures:</p>
+                            
+                            <div class="iso-grid">
+                                <div class="iso-card">
+                                    <div class="iso-header">
+                                        <span class="iso-icon">🖥️</span>
+                                        <h3>x86_64 Generic</h3>
+                                    </div>
+                                    <p class="iso-desc">Universal compatibility for all 64-bit processors</p>
+                                    <div class="iso-actions">
+                                        <a href="https://github.com/openSVM/osvmarchi/actions/workflows/build-iso.yml" class="download-btn" target="_blank">
+                                            Download
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="iso-card">
+                                    <div class="iso-header">
+                                        <span class="iso-icon">🏎️</span>
+                                        <h3>Zen4 Optimized</h3>
+                                    </div>
+                                    <p class="iso-desc">AMD Ryzen 7000 series, EPYC Genoa (-march=znver4)</p>
+                                    <div class="iso-actions">
+                                        <a href="https://github.com/openSVM/osvmarchi/actions/workflows/build-iso.yml" class="download-btn" target="_blank">
+                                            Download
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="iso-card">
+                                    <div class="iso-header">
+                                        <span class="iso-icon">🚀</span>
+                                        <h3>Zen5 Optimized</h3>
+                                    </div>
+                                    <p class="iso-desc">AMD Ryzen 9000 series, EPYC Turin (-march=znver5)</p>
+                                    <div class="iso-actions">
+                                        <a href="https://github.com/openSVM/osvmarchi/actions/workflows/build-iso.yml" class="download-btn" target="_blank">
+                                            Download
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="iso-card">
+                                    <div class="iso-header">
+                                        <span class="iso-icon">🏢</span>
+                                        <h3>EPYC Server</h3>
+                                    </div>
+                                    <p class="iso-desc">AMD EPYC Rome/Milan server processors (-march=znver2)</p>
+                                    <div class="iso-actions">
+                                        <a href="https://github.com/openSVM/osvmarchi/actions/workflows/build-iso.yml" class="download-btn" target="_blank">
+                                            Download
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="iso-card">
+                                    <div class="iso-header">
+                                        <span class="iso-icon">🎯</span>
+                                        <h3>Threadripper</h3>
+                                    </div>
+                                    <p class="iso-desc">AMD Threadripper PRO/WX series (-march=znver3)</p>
+                                    <div class="iso-actions">
+                                        <a href="https://github.com/openSVM/osvmarchi/actions/workflows/build-iso.yml" class="download-btn" target="_blank">
+                                            Download
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="iso-card">
+                                    <div class="iso-header">
+                                        <span class="iso-icon">💻</span>
+                                        <h3>AMD64 Baseline</h3>
+                                    </div>
+                                    <p class="iso-desc">All AMD 64-bit processors baseline optimization</p>
+                                    <div class="iso-actions">
+                                        <a href="https://github.com/openSVM/osvmarchi/actions/workflows/build-iso.yml" class="download-btn" target="_blank">
+                                            Download
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="download-instructions">
+                                <h3>Download Instructions</h3>
+                                <ol>
+                                    <li>Click on "Download" for your target architecture</li>
+                                    <li>Navigate to the latest successful workflow run</li>
+                                    <li>Download the ISO from the artifacts section</li>
+                                    <li>Verify using the provided checksums</li>
+                                    <li>Create a bootable USB drive</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <!-- Documentation Content -->
+                        <div id="documentation-content" class="content-page">
+                            <h2>📚 Documentation</h2>
+                            <div class="doc-grid">
+                                <div class="doc-card">
+                                    <h3>🔧 Installation Guide</h3>
+                                    <p>Complete installation instructions for OSVMarchi</p>
+                                    <a href="ISO_BUILDING.md" target="_blank">Read More</a>
+                                </div>
+                                <div class="doc-card">
+                                    <h3>⚙️ Configuration</h3>
+                                    <p>Customize your OSVMarchi installation</p>
+                                    <a href="https://github.com/openSVM/osvmarchi/tree/main/config" target="_blank">View Configs</a>
+                                </div>
+                                <div class="doc-card">
+                                    <h3>🎨 Themes</h3>
+                                    <p>Available color themes and customization options</p>
+                                    <a href="https://github.com/openSVM/osvmarchi/tree/main/themes" target="_blank">Browse Themes</a>
+                                </div>
+                                <div class="doc-card">
+                                    <h3>🛠️ Utilities</h3>
+                                    <p>Built-in commands and utility scripts</p>
+                                    <a href="https://github.com/openSVM/osvmarchi/tree/main/bin" target="_blank">View Commands</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Features Content -->
+                        <div id="features-content" class="content-page">
+                            <h2>⚡ Features</h2>
+                            <div class="features-grid">
+                                <div class="feature-card">
+                                    <span class="feature-icon">🪟</span>
+                                    <h3>Hyprland Window Manager</h3>
+                                    <p>Modern Wayland compositor with stunning animations and effects</p>
+                                </div>
+                                <div class="feature-card">
+                                    <span class="feature-icon">⚡</span>
+                                    <h3>Solana Development</h3>
+                                    <p>Pre-configured environment for Solana and web development</p>
+                                </div>
+                                <div class="feature-card">
+                                    <span class="feature-icon">🎨</span>
+                                    <h3>Beautiful Themes</h3>
+                                    <p>Multiple color schemes including Catppuccin, Gruvbox, and Nord</p>
+                                </div>
+                                <div class="feature-card">
+                                    <span class="feature-icon">🛠️</span>
+                                    <h3>84+ Utility Commands</h3>
+                                    <p>Comprehensive set of management and configuration tools</p>
+                                </div>
+                                <div class="feature-card">
+                                    <span class="feature-icon">📦</span>
+                                    <h3>118+ Packages</h3>
+                                    <p>Carefully curated package selection for development</p>
+                                </div>
+                                <div class="feature-card">
+                                    <span class="feature-icon">🔄</span>
+                                    <h3>Auto-Updates</h3>
+                                    <p>Intelligent system update and configuration management</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Installation Content -->
+                        <div id="installation-content" class="content-page">
+                            <h2>🔧 Installation</h2>
+                            <div class="install-methods">
+                                <div class="install-card">
+                                    <h3>💿 ISO Installation (Recommended)</h3>
+                                    <div class="code-block">
+                                        <code>
+                                            # 1. Download ISO for your architecture<br>
+                                            # 2. Create bootable USB drive<br>
+                                            # 3. Boot from USB<br>
+                                            # 4. Run installation<br>
+                                            osvmarchi-install
+                                        </code>
+                                    </div>
+                                </div>
+                                
+                                <div class="install-card">
+                                    <h3>🌐 Direct Installation</h3>
+                                    <div class="code-block">
+                                        <code>
+                                            # On fresh Arch Linux installation<br>
+                                            curl -fsSL https://github.com/openSVM/osvmarchi/raw/main/boot.sh | bash
+                                        </code>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="requirements">
+                                <h3>⚠️ System Requirements</h3>
+                                <ul>
+                                    <li>Fresh Arch Linux x86_64 installation</li>
+                                    <li>NOT an Arch derivative (no CachyOS, EndeavourOS, etc.)</li>
+                                    <li>NOT running as root</li>
+                                    <li>No existing GNOME or KDE desktop environments</li>
+                                    <li>Internet connection for package downloads</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- GitHub Content -->
+                        <div id="github-content" class="content-page">
+                            <h2>🐙 GitHub Repository</h2>
+                            <div class="github-stats">
+                                <div class="stat-card">
+                                    <span class="stat-icon">⭐</span>
+                                    <span class="stat-label">Stars</span>
+                                    <span class="stat-value" id="github-stars">-</span>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-icon">🍴</span>
+                                    <span class="stat-label">Forks</span>
+                                    <span class="stat-value" id="github-forks">-</span>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-icon">🐛</span>
+                                    <span class="stat-label">Issues</span>
+                                    <span class="stat-value" id="github-issues">-</span>
+                                </div>
+                            </div>
+                            
+                            <div class="github-links">
+                                <a href="https://github.com/openSVM/osvmarchi" target="_blank" class="github-link">
+                                    <span class="link-icon">📁</span>
+                                    Repository
+                                </a>
+                                <a href="https://github.com/openSVM/osvmarchi/issues" target="_blank" class="github-link">
+                                    <span class="link-icon">🐛</span>
+                                    Issues
+                                </a>
+                                <a href="https://github.com/openSVM/osvmarchi/pulls" target="_blank" class="github-link">
+                                    <span class="link-icon">🔄</span>
+                                    Pull Requests
+                                </a>
+                                <a href="https://github.com/openSVM/osvmarchi/actions" target="_blank" class="github-link">
+                                    <span class="link-icon">⚙️</span>
+                                    Actions
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div id="search-bar" class="hidden">
+            <input type="text" id="search-input" placeholder="Search OSVMarchi documentation...">
+            <div id="search-results"></div>
+        </div>
+
+        <!-- Bottom Menu Bar -->
+        <div id="bottom-menu">
+            <div class="menu-items">
+                <div class="menu-item" onclick="showHelp()" tabindex="0">
+                    <span class="menu-key">F1</span>
+                    <span class="menu-label">Help</span>
+                </div>
+                <div class="menu-item" onclick="toggleSearch()" tabindex="0">
+                    <span class="menu-key">F3</span>
+                    <span class="menu-label">Search</span>
+                </div>
+                <div class="menu-item" onclick="showContent('downloads')" tabindex="0">
+                    <span class="menu-key">F5</span>
+                    <span class="menu-label">Download</span>
+                </div>
+                <div class="menu-item" onclick="window.open('https://github.com/openSVM/osvmarchi', '_blank')" tabindex="0">
+                    <span class="menu-key">F6</span>
+                    <span class="menu-label">GitHub</span>
+                </div>
+                <div class="menu-item" onclick="toggleTheme()" tabindex="0">
+                    <span class="menu-key">F7</span>
+                    <span class="menu-label">Theme</span>
+                </div>
+                <div class="menu-item" onclick="showContent('features')" tabindex="0">
+                    <span class="menu-key">F8</span>
+                    <span class="menu-label">Features</span>
+                </div>
+                <div class="menu-item" onclick="showAbout()" tabindex="0">
+                    <span class="menu-key">F10</span>
+                    <span class="menu-label">About</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Help/About -->
+        <div id="modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span id="modal-title">Modal Title</span>
+                    <span class="modal-close" onclick="closeModal()">&times;</span>
+                </div>
+                <div class="modal-body" id="modal-body">
+                    Modal content goes here
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/far-interface.js"></script>
+</body>
+</html>
