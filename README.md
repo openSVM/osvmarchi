@@ -67,12 +67,43 @@ Each ISO includes:
 
 ### Building Custom ISOs
 
-The ISO building process is automated via GitHub Actions. To build custom ISOs:
+OSVMarchi provides two methods for building custom ISO images:
+
+#### Method 1: GitHub Actions (Cloud Building)
+
+The ISO building process is automated via GitHub Actions:
 
 1. Fork this repository
 2. Modify the `.github/workflows/build-iso.yml` as needed
 3. Push changes to trigger the build workflow
 4. Download your custom ISOs from the workflow artifacts
+
+#### Method 2: Local Building (Arch Linux)
+
+For local building on Arch Linux systems, use the included build script:
+
+```bash
+# Clone the repository
+git clone https://github.com/openSVM/osvmarchi.git
+cd osvmarchi
+
+# Build specific architecture
+./build-iso.sh zen4
+
+# Build all architectures
+./build-iso.sh all
+
+# Show help
+./build-iso.sh --help
+```
+
+**Requirements for local building:**
+- Arch Linux system (required)
+- Non-root user with sudo access
+- At least 5GB free disk space per ISO
+- Internet connection for package downloads
+
+See [docs/ISO_BUILDING.md](docs/ISO_BUILDING.md) for detailed documentation.
 
 ### Architecture Selection Guide
 
