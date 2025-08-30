@@ -76,12 +76,12 @@ if ! command -v limine &>/dev/null; then
     # Relying on mkinitcpio to assemble a UKI
     # https://wiki.archlinux.org/title/Unified_kernel_image
     if ! grep -q splash /etc/cmdline.d/*.conf; then
-      # Need splash, create the omarchy file
-      echo "splash" | sudo tee -a /etc/cmdline.d/omarchy.conf
+      # Need splash, create the osvmarchi file
+      echo "splash" | sudo tee -a /etc/cmdline.d/osvmarchi.conf
     fi
     if ! grep -q quiet /etc/cmdline.d/*.conf; then
-      # Need quiet, create or append the omarchy file
-      echo "quiet" | sudo tee -a /etc/cmdline.d/omarchy.conf
+      # Need quiet, create or append the osvmarchi file
+      echo "quiet" | sudo tee -a /etc/cmdline.d/osvmarchi.conf
     fi
   elif [ -f "/etc/kernel/cmdline" ]; then # UKI Alternate
     # Alternate UKI kernel cmdline location

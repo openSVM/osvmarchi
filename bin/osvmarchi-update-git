@@ -1,0 +1,5 @@
+#!/bin/bash
+
+echo -e "\e[32mUpdate OSVMarchi\e[0m"
+git -C $OSVMARCHI_PATH pull --autostash
+git -C $OSVMARCHI_PATH diff --check || git -C $OSVMARCHI_PATH reset --merge

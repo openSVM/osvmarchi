@@ -1,5 +1,5 @@
-echo "Adding Omarchy version info to fastfetch"
-if ! grep -q "omarchy" ~/.config/fastfetch/config.jsonc; then
-  cp ~/.local/share/omarchy/config/fastfetch/config.jsonc ~/.config/fastfetch/
+echo "Adding OSVMarchi version info to fastfetch"
+if ! grep -q "osvmarchi" ~/.config/fastfetch/config.jsonc; then
+  cp ~/.local/share/osvmarchi/config/fastfetch/config.jsonc ~/.config/fastfetch/
 fi
 

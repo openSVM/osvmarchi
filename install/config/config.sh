@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Copy over Omarchy configs
+# Copy over OSVMarchi configs
 mkdir -p ~/.config
-cp -R ~/.local/share/omarchy/config/* ~/.config/
+cp -R ~/.local/share/osvmarchi/config/* ~/.config/
 
-# Use default bashrc from Omarchy
-cp ~/.local/share/omarchy/default/bashrc ~/.bashrc
+# Use default bashrc from OSVMarchi
+cp ~/.local/share/osvmarchi/default/bashrc ~/.bashrc

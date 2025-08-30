@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cmd="$*"
+setsid alacritty --class OSVMarchi -e bash -c "osvmarchi-show-logo; $cmd; osvmarchi-show-done"

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+osvmarchi-refresh-config waybar/config.jsonc
+osvmarchi-refresh-config waybar/style.css
+osvmarchi-restart-waybar

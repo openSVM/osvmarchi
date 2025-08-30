@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if command -v limine &>/dev/null; then
-  sudo tee /etc/mkinitcpio.conf.d/omarchy_hooks.conf <<EOF >/dev/null
+  sudo tee /etc/mkinitcpio.conf.d/osvmarchi_hooks.conf <<EOF >/dev/null
 HOOKS=(base udev plymouth keyboard autodetect microcode modconf kms keymap consolefont block encrypt filesystems fsck btrfs-overlayfs)
 EOF
 
@@ -13,7 +13,7 @@ EOF
   CMDLINE=$(grep "^[[:space:]]*cmdline:" "$limine_config" | head -1 | sed 's/^[[:space:]]*cmdline:[[:space:]]*//')
 
   sudo tee /etc/default/limine <<EOF >/dev/null
-TARGET_OS_NAME="Omarchy"
+TARGET_OS_NAME="OSVMarchi"
 
 ESP_PATH="/boot"
 
@@ -44,7 +44,7 @@ EOF
 ### Read more at config document: https://github.com/limine-bootloader/limine/blob/trunk/CONFIG.md
 #timeout: 3
 default_entry: 2
-interface_branding: Omarchy Bootloader
+interface_branding: OSVMarchi Bootloader
 interface_branding_color: 2
 hash_mismatch_panic: no
 
@@ -66,7 +66,7 @@ EOF
   sudo limine-update
 
   # Match Snapper configs if not installing from the ISO
-  if [ -z "${OMARCHY_CHROOT_INSTALL:-}" ]; then
+  if [ -z "${OSVMARCHI_CHROOT_INSTALL:-}" ]; then
     if ! sudo snapper list-configs 2>/dev/null | grep -q "root"; then
       sudo snapper -c root create-config /
     fi
@@ -85,11 +85,11 @@ EOF
 fi
 
 # Add UKI entry to UEFI machines to skip bootloader showing on normal boot
-if [ -n "$EFI" ] && efibootmgr &>/dev/null && ! efibootmgr | grep -q Omarchy &&
+if [ -n "$EFI" ] && efibootmgr &>/dev/null && ! efibootmgr | grep -q OSVMarchi &&
   ! cat /sys/class/dmi/id/bios_vendor 2>/dev/null | grep -qi "American Megatrends"; then
   sudo efibootmgr --create \
     --disk "$(findmnt -n -o SOURCE /boot | sed 's/p\?[0-9]*$//')" \
     --part "$(findmnt -n -o SOURCE /boot | grep -o 'p\?[0-9]*$' | sed 's/^p//')" \
-    --label "Omarchy" \
+    --label "OSVMarchi" \
     --loader "\\EFI\\Linux\\$(cat /etc/machine-id)_linux.efi"
 fi

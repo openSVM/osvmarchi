@@ -1,5 +1,5 @@
 echo "Lock 1password on screen lock"
 
-if ! grep -q "omarchy-lock-screen" ~/.config/hypr/hypridle.conf; then
-  omarchy-refresh-hypridle
+if ! grep -q "osvmarchi-lock-screen" ~/.config/hypr/hypridle.conf; then
+  osvmarchi-refresh-hypridle
 fi

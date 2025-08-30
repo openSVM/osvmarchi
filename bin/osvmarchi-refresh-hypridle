@@ -1,0 +1,4 @@
+#!/bin/bash
+
+osvmarchi-refresh-config hypr/hypridle.conf
+osvmarchi-restart-hypridle

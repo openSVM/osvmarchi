@@ -1,0 +1,7 @@
+#!/bin/bash
+
+osvmarchi-refresh-config hypr/autostart.conf
+osvmarchi-refresh-config hypr/bindings.conf
+osvmarchi-refresh-config hypr/envs.conf
+osvmarchi-refresh-config hypr/input.conf
+osvmarchi-refresh-config hypr/hyprland.conf
