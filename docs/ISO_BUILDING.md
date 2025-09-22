@@ -177,11 +177,18 @@ Each built ISO contains:
 Once booted into the live environment:
 
 ```bash
-# Start the OSVMarchi installation
+# Start the OSVMarchi installation with GUI partitioning
 osvmarchi-install
 ```
 
-This will run the complete OSVMarchi installation process, transforming the target system into a fully-configured development environment.
+This will run the complete OSVMarchi installation process with:
+- Interactive disk selection
+- Automatic UEFI partitioning or manual GParted GUI
+- Base Arch Linux system installation
+- Full OSVMarchi configuration deployment
+- Bootloader setup and system configuration
+
+The installer can handle any disk format and provides both automatic and manual partitioning options.
 
 ### Architecture Verification
 

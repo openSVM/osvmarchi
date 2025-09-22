@@ -2,13 +2,16 @@ sudo pacman -S --noconfirm --needed \
   1password-beta \
   1password-cli \
   alacritty \
+  arch-install-scripts \
   avahi \
   bash-completion \
   bat \
   blueberry \
   brightnessctl \
+  btrfs-progs \
   btop \
   cargo \
+  cfdisk \
   clang \
   cups \
   cups-browsed \
@@ -17,7 +20,9 @@ sudo pacman -S --noconfirm --needed \
   docker \
   docker-buildx \
   docker-compose \
+  dosfstools \
   dust \
+  e2fsprogs \
   evince \
   eza \
   fastfetch \
@@ -28,6 +33,8 @@ sudo pacman -S --noconfirm --needed \
   ffmpegthumbnailer \
   fzf \
   gcc14 \
+  gparted \
+  gptfdisk \
   github-cli \
   gnome-calculator \
   gnome-keyring \
