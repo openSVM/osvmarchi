@@ -36,11 +36,29 @@ check_live_environment() {
         exit 1
     fi
     
-    # Check if we're in a live environment (archiso)
-    if [[ ! -f /run/archiso/bootmnt/arch/boot/x86_64/vmlinuz-linux ]] && [[ ! -d /run/archiso ]]; then
+    # Check if we're in a live environment (multiple detection methods)
+    local is_live=false
+    
+    # Method 1: Check for archiso
+    if [[ -d /run/archiso ]] || [[ -f /run/archiso/bootmnt/arch/boot/x86_64/vmlinuz-linux ]]; then
+        is_live=true
+    fi
+    
+    # Method 2: Check for live boot indicator
+    if grep -q "archisobasedir" /proc/cmdline 2>/dev/null; then
+        is_live=true
+    fi
+    
+    # Method 3: Check if root filesystem is tmpfs/overlay
+    if mount | grep -q "/ type tmpfs\|/ type overlay"; then
+        is_live=true
+    fi
+    
+    if [[ "$is_live" != "true" ]]; then
         log_warning "Not detected as Arch Linux live environment"
         log_warning "This installer is designed for live environments"
-        if ! gum confirm "Continue anyway?"; then
+        log_warning "Running on installed systems may cause data loss!"
+        if ! gum confirm "Continue anyway? (NOT RECOMMENDED)"; then
             exit 1
         fi
     fi
@@ -69,15 +87,46 @@ detect_disks() {
     
     # Get list of block devices that are disks (not partitions)
     local disks
-    mapfile -t disks < <(lsblk -dpno NAME,SIZE,MODEL | grep -E '^/dev/(sd|nvme|vd)[a-z]' | head -10)
-    
-    if [[ ${#disks[@]} -eq 0 ]]; then
-        log_error "No suitable disks found for installation"
+    if ! mapfile -t disks < <(lsblk -dpno NAME,SIZE,MODEL | grep -E '^/dev/(sd|nvme|vd|hd)[a-z]' | head -10); then
+        log_error "Failed to detect disks using lsblk"
         exit 1
     fi
     
-    log_info "Found ${#disks[@]} disk(s):"
-    printf '%s\n' "${disks[@]}"
+    # Filter out removable devices (USB drives) unless explicitly requested
+    local filtered_disks=()
+    for disk_line in "${disks[@]}"; do
+        local disk_path=$(echo "$disk_line" | awk '{print $1}')
+        local disk_name=$(basename "$disk_path")
+        
+        # Check if disk is removable
+        local removable="0"
+        if [[ -f "/sys/block/$disk_name/removable" ]]; then
+            removable=$(cat "/sys/block/$disk_name/removable")
+        fi
+        
+        # Include non-removable disks or warn about removable ones
+        if [[ "$removable" == "0" ]]; then
+            filtered_disks+=("$disk_line")
+        else
+            log_warning "Skipping removable device: $disk_path"
+        fi
+    done
+    
+    # Use filtered disks or fall back to all disks if none found
+    if [[ ${#filtered_disks[@]} -eq 0 ]]; then
+        log_warning "No non-removable disks found, showing all available disks"
+        filtered_disks=("${disks[@]}")
+    fi
+    
+    if [[ ${#filtered_disks[@]} -eq 0 ]]; then
+        log_error "No suitable disks found for installation"
+        log_info "Available block devices:"
+        lsblk -f
+        exit 1
+    fi
+    
+    log_info "Found ${#filtered_disks[@]} suitable disk(s):"
+    printf '%s\n' "${filtered_disks[@]}"
     echo
 }
 
@@ -416,6 +465,7 @@ USAGE:
 
 OPTIONS:
     -h, --help      Show this help message
+    -t, --test      Test mode (validation only, no installation)
 
 REQUIREMENTS:
     - Arch Linux live environment (ISO)
@@ -439,15 +489,67 @@ PARTITIONING:
 
 EXAMPLES:
     $0                  # Start interactive installation
+    $0 --test          # Test disk detection and validation only
     $0 --help          # Show this help
 
 EOF
+}
+
+# Test mode - validation only
+test_mode() {
+    log_info "Running OSVMarchi installer in test mode..."
+    
+    # Run all checks without actual installation
+    log_info "Testing live environment detection..."
+    if [[ ! -f /etc/arch-release ]]; then
+        log_error "Not running on Arch Linux"
+    else
+        log_success "Arch Linux detected"
+    fi
+    
+    log_info "Testing prerequisite tools..."
+    local missing_tools=()
+    for tool in gparted gum lsblk; do
+        if command -v "$tool" &>/dev/null; then
+            log_success "$tool: Available"
+        else
+            log_warning "$tool: Missing"
+            missing_tools+=("$tool")
+        fi
+    done
+    
+    log_info "Testing disk detection..."
+    detect_disks
+    
+    log_info "Testing partition detection..."
+    local disk_choices=()
+    while IFS= read -r line; do
+        if [[ $line =~ ^(/dev/[^[:space:]]+) ]]; then
+            disk_choices+=("${BASH_REMATCH[1]}")
+        fi
+    done < <(lsblk -dpno NAME,SIZE,MODEL | grep -E '^/dev/(sd|nvme|vd|hd)[a-z]')
+    
+    log_info "Available disks for installation:"
+    printf '  %s\n' "${disk_choices[@]}"
+    
+    if [[ ${#missing_tools[@]} -eq 0 ]]; then
+        log_success "All tests passed! System ready for installation."
+    else
+        log_warning "Some tools missing: ${missing_tools[*]}"
+        log_info "Run 'pacman -S ${missing_tools[*]}' to install missing tools"
+    fi
+    
+    log_info "Test mode completed. Use '$0' (without --test) to start actual installation."
 }
 
 # Parse command line arguments
 case "${1:-}" in
     -h|--help)
         show_help
+        exit 0
+        ;;
+    -t|--test)
+        test_mode
         exit 0
         ;;
     "")
