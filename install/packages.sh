@@ -67,6 +67,7 @@ sudo pacman -S --noconfirm --needed \
   man \
   mariadb-libs \
   mise \
+  msedit \
   mpv \
   nautilus \
   noto-fonts \
