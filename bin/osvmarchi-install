@@ -5,6 +5,38 @@
 
 set -euo pipefail
 
+# Configuration file for installation state
+INSTALL_CONFIG_FILE="/tmp/osvmarchi-install.conf"
+
+# Save installation state
+save_install_state() {
+    local key="$1"
+    local value="$2"
+    
+    # Create config file if it doesn't exist
+    [[ ! -f "$INSTALL_CONFIG_FILE" ]] && touch "$INSTALL_CONFIG_FILE"
+    
+    # Remove existing key if present
+    sed -i "/^${key}=/d" "$INSTALL_CONFIG_FILE"
+    
+    # Add new key=value
+    echo "${key}=${value}" >> "$INSTALL_CONFIG_FILE"
+}
+
+# Load installation state
+load_install_state() {
+    local key="$1"
+    
+    if [[ -f "$INSTALL_CONFIG_FILE" ]]; then
+        grep "^${key}=" "$INSTALL_CONFIG_FILE" | cut -d'=' -f2-
+    fi
+}
+
+# Clean up configuration
+cleanup_install_state() {
+    [[ -f "$INSTALL_CONFIG_FILE" ]] && rm -f "$INSTALL_CONFIG_FILE"
+}
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -76,8 +108,21 @@ check_prerequisites() {
     
     if [[ ${#missing_tools[@]} -gt 0 ]]; then
         log_error "Missing required tools: ${missing_tools[*]}"
-        log_info "Installing missing tools..."
-        pacman -Sy --noconfirm "${missing_tools[@]}"
+        log_warning "The following tools need to be installed: ${missing_tools[*]}"
+        
+        if gum confirm "Install missing tools now? (Requires internet connection)"; then
+            log_info "Installing missing tools..."
+            if ! pacman -Sy --noconfirm "${missing_tools[@]}"; then
+                log_error "Failed to install required tools"
+                log_info "Please install manually: pacman -S ${missing_tools[*]}"
+                exit 1
+            fi
+            log_success "Tools installed successfully"
+        else
+            log_error "Cannot proceed without required tools"
+            log_info "Please install manually: pacman -S ${missing_tools[*]}"
+            exit 1
+        fi
     fi
 }
 
@@ -203,8 +248,25 @@ automatic_partition() {
         exit 1
     fi
     
-    # Unmount any existing partitions
-    umount "${disk}"* 2>/dev/null || true
+    # Safely unmount any existing partitions
+    log_info "Checking for mounted partitions on $disk..."
+    local mounted_parts
+    mapfile -t mounted_parts < <(findmnt -rno TARGET,SOURCE | grep "^/.*$disk" | awk '{print $1}' | sort -r)
+    
+    if [[ ${#mounted_parts[@]} -gt 0 ]]; then
+        log_warning "Found mounted partitions, unmounting safely..."
+        for mount_point in "${mounted_parts[@]}"; do
+            log_info "Unmounting $mount_point"
+            if ! umount "$mount_point" 2>/dev/null; then
+                log_warning "Normal unmount failed, forcing unmount of $mount_point"
+                if ! umount -f "$mount_point" 2>/dev/null; then
+                    log_error "Failed to unmount $mount_point, disk may be busy"
+                    log_info "Please manually unmount all partitions on $disk before continuing"
+                    exit 1
+                fi
+            fi
+        done
+    fi
     
     # Wipe disk
     log_info "Wiping disk $disk..."
@@ -239,9 +301,9 @@ automatic_partition() {
     log_info "Formatting root partition..."
     mkfs.ext4 -L "OSVMarchi" "$root_part"
     
-    # Export partition variables for later use
-    export OSVMARCHI_BOOT_PART="$boot_part"
-    export OSVMARCHI_ROOT_PART="$root_part"
+    # Save partition information to config file
+    save_install_state "OSVMARCHI_BOOT_PART" "$boot_part"
+    save_install_state "OSVMARCHI_ROOT_PART" "$root_part"
     
     log_success "Automatic partitioning complete"
 }
@@ -282,28 +344,107 @@ manual_partition() {
         exit 1
     fi
     
-    # Export partition variables for later use
-    export OSVMARCHI_BOOT_PART="$boot_part"
-    export OSVMARCHI_ROOT_PART="$root_part"
+    # Validate EFI System Partition
+    log_info "Validating EFI System Partition..."
+    local boot_fstype
+    boot_fstype=$(lsblk -no FSTYPE "$boot_part" 2>/dev/null || echo "unknown")
     
-    log_success "Manual partitioning complete"
-    log_info "Boot partition: $boot_part"
-    log_info "Root partition: $root_part"
+    if [[ "$boot_fstype" != "vfat" ]]; then
+        log_warning "EFI partition ($boot_part) is not FAT32 (found: $boot_fstype)"
+        if gum confirm "Format $boot_part as FAT32?"; then
+            log_info "Formatting EFI partition as FAT32..."
+            mkfs.fat -F 32 -n "EFI" "$boot_part"
+        else
+            log_error "EFI partition must be FAT32 for UEFI boot"
+            exit 1
+        fi
+    fi
+    
+    # Check EFI System Partition flag using sgdisk
+    if command -v sgdisk &>/dev/null; then
+        local part_num
+        part_num=$(echo "$boot_part" | grep -o '[0-9]*$')
+        local disk_path
+        disk_path=$(echo "$boot_part" | sed 's/[p]*[0-9]*$//')
+        
+        if ! sgdisk -i "$part_num" "$disk_path" | grep -q "EF00"; then
+            log_warning "EFI partition does not have ESP (EF00) type code"
+            if gum confirm "Set ESP type code on $boot_part?"; then
+                sgdisk -t "${part_num}:EF00" "$disk_path"
+                log_success "ESP type code set"
+            else
+                log_warning "Continuing without ESP type code (may cause boot issues)"
+            fi
+        fi
+    fi
+    
+    # Validate root partition filesystem
+    log_info "Validating root partition..."
+    local root_fstype
+    root_fstype=$(lsblk -no FSTYPE "$root_part" 2>/dev/null || echo "unknown")
+    
+    if [[ "$root_fstype" == "unknown" || "$root_fstype" == "" ]]; then
+        log_warning "Root partition ($root_part) appears unformatted"
+        local fs_choice
+        fs_choice=$(echo -e "ext4\nbtrfs" | gum choose --header="Choose filesystem for root partition:")
+        
+        case "$fs_choice" in
+            "ext4")
+                log_info "Formatting root partition as ext4..."
+                mkfs.ext4 -L "OSVMarchi" "$root_part"
+                ;;
+            "btrfs")
+                log_info "Formatting root partition as btrfs..."
+                mkfs.btrfs -L "OSVMarchi" "$root_part"
+                ;;
+        esac
+    elif [[ "$root_fstype" != "ext4" && "$root_fstype" != "btrfs" && "$root_fstype" != "xfs" ]]; then
+        log_warning "Root partition filesystem ($root_fstype) may not be suitable"
+        if ! gum confirm "Continue with $root_fstype filesystem?"; then
+            exit 1
+        fi
+    fi
+    
+    # Save partition information to config file
+    save_install_state "OSVMARCHI_BOOT_PART" "$boot_part"
+    save_install_state "OSVMARCHI_ROOT_PART" "$root_part"
+    
+    log_success "Manual partitioning complete and validated"
+    log_info "Boot partition: $boot_part ($boot_fstype)"
+    log_info "Root partition: $root_part ($root_fstype)"
 }
 
 # Mount partitions and install base system
 install_base_system() {
-    local root_part="$OSVMARCHI_ROOT_PART"
-    local boot_part="$OSVMARCHI_BOOT_PART"
+    local root_part
+    local boot_part
+    
+    # Load partition information from config
+    root_part=$(load_install_state "OSVMARCHI_ROOT_PART")
+    boot_part=$(load_install_state "OSVMARCHI_BOOT_PART")
+    
+    if [[ -z "$root_part" || -z "$boot_part" ]]; then
+        log_error "Partition information not found in configuration"
+        exit 1
+    fi
     
     log_info "Mounting partitions..."
+    log_info "Root: $root_part -> /mnt"
+    log_info "Boot: $boot_part -> /mnt/boot"
     
     # Mount root
-    mount "$root_part" /mnt
+    if ! mount "$root_part" /mnt; then
+        log_error "Failed to mount root partition $root_part"
+        exit 1
+    fi
     
     # Create and mount boot
     mkdir -p /mnt/boot
-    mount "$boot_part" /mnt/boot
+    if ! mount "$boot_part" /mnt/boot; then
+        log_error "Failed to mount boot partition $boot_part"
+        umount /mnt 2>/dev/null || true
+        exit 1
+    fi
     
     log_info "Installing base Arch Linux system..."
     
@@ -323,8 +464,17 @@ install_base_system() {
 configure_base_system() {
     log_info "Configuring base system..."
     
-    # Chroot configuration script
-    cat > /mnt/configure_system.sh << 'EOF'
+    # Get partition information
+    local root_part
+    root_part=$(load_install_state "OSVMARCHI_ROOT_PART")
+    
+    if [[ -z "$root_part" ]]; then
+        log_error "Root partition information not found"
+        exit 1
+    fi
+    
+    # Create configuration script that will run in chroot
+    cat > /mnt/configure_system.sh << EOF
 #!/bin/bash
 set -e
 
@@ -353,13 +503,16 @@ systemctl enable NetworkManager
 # Install and configure bootloader (systemd-boot)
 bootctl install
 
+# Get root partition UUID for bootloader
+ROOT_PARTUUID=\$(blkid -s PARTUUID -o value $root_part)
+
 # Create bootloader entry
 mkdir -p /boot/loader/entries
 cat > /boot/loader/entries/arch.conf << EOL
 title   OSVMarchi
 linux   /vmlinuz-linux
 initrd  /initramfs-linux.img
-options root=PARTUUID=$(blkid -s PARTUUID -o value ${OSVMARCHI_ROOT_PART}) rw quiet splash
+options root=PARTUUID=\$ROOT_PARTUUID rw quiet splash
 EOL
 
 cat > /boot/loader/loader.conf << EOL
@@ -371,15 +524,28 @@ EOL
 
 # Create user
 useradd -m -G wheel -s /bin/bash user
-echo "user:user" | chpasswd
 
-# Configure sudo
-echo "%wheel ALL=(ALL:ALL) ALL" >> /etc/sudoers
+# Disable root password and lock account for security
+passwd -l root
 
-# Set root password
-echo "root:root" | chpasswd
+# Configure sudo using proper sudoers.d approach
+cat > /etc/sudoers.d/wheel << EOL
+# Allow wheel group to use sudo
+%wheel ALL=(ALL:ALL) ALL
+EOL
+
+# Set secure permissions on sudoers.d file
+chmod 0440 /etc/sudoers.d/wheel
+
+# Force password change on first login for user
+chage -d 0 user
+
+# Set a temporary password that must be changed
+echo "user:changeme" | chpasswd
 
 echo "Base system configuration complete"
+echo "SECURITY: User password must be changed on first login"
+echo "SECURITY: Root account is locked for security"
 EOF
 
     # Make script executable and run it
@@ -442,11 +608,22 @@ main() {
     
     # Cleanup
     log_info "Cleaning up..."
-    umount -R /mnt
+    
+    # Safely unmount all mounted filesystems
+    if mountpoint -q /mnt/boot; then
+        umount /mnt/boot
+    fi
+    if mountpoint -q /mnt; then
+        umount /mnt
+    fi
+    
+    # Clean up temporary configuration
+    cleanup_install_state
     
     log_success "OSVMarchi installation completed successfully!"
     log_info "You can now reboot into your new OSVMarchi system"
-    log_info "Default login: user/user (change password after first login)"
+    log_warning "IMPORTANT: User password is 'changeme' and MUST be changed on first login"
+    log_info "Root account is locked for security - use sudo for administrative tasks"
     
     if gum confirm "Reboot now?"; then
         reboot
