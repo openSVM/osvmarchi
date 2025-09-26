@@ -43,7 +43,19 @@ load_install_state() {
     local key="$1"
     
     if [[ -f "$INSTALL_CONFIG_FILE" ]]; then
-        grep "^${key}=" "$INSTALL_CONFIG_FILE" | cut -d'=' -f2-
+        local value
+        value=$(grep "^${key}=" "$INSTALL_CONFIG_FILE" | cut -d'=' -f2-)
+        
+        if [[ -z "$value" ]]; then
+            log_error "Configuration key '$key' not found or empty"
+            return 1
+        fi
+        
+        echo "$value"
+        return 0
+    else
+        log_error "Configuration file not found: $INSTALL_CONFIG_FILE"
+        return 1
     fi
 }
 
@@ -128,12 +140,38 @@ check_prerequisites() {
         
         if gum confirm "Install missing tools now? (Requires internet connection)"; then
             log_info "Installing missing tools..."
-            if ! pacman -Sy --noconfirm "${missing_tools[@]}"; then
-                log_error "Failed to install required tools"
-                log_info "Please install manually: pacman -S ${missing_tools[*]}"
-                exit 1
-            fi
-            log_success "Tools installed successfully"
+            
+            # Add retry logic for pacman installation
+            local install_attempts=0
+            local max_install_attempts=3
+            local install_success=false
+            
+            while [[ $install_attempts -lt $max_install_attempts ]] && [[ "$install_success" != "true" ]]; do
+                install_attempts=$((install_attempts + 1))
+                log_info "Installation attempt $install_attempts of $max_install_attempts..."
+                
+                if pacman -Sy --noconfirm "${missing_tools[@]}"; then
+                    install_success=true
+                    log_success "Tools installed successfully"
+                    break
+                else
+                    if [[ $install_attempts -lt $max_install_attempts ]]; then
+                        log_warning "Installation attempt $install_attempts failed, retrying in 3 seconds..."
+                        sleep 3
+                    else
+                        log_error "Failed to install required tools after $max_install_attempts attempts"
+                        log_info "Possible issues: network connectivity, package mirrors, or disk space"
+                        log_info "Please try manually: pacman -Sy && pacman -S ${missing_tools[*]}"
+                        
+                        if gum confirm "Continue without installing tools? (Installation may fail)"; then
+                            log_warning "Continuing without required tools - installation may fail"
+                            break
+                        else
+                            exit 1
+                        fi
+                    fi
+                fi
+            done
         else
             log_error "Cannot proceed without required tools"
             log_info "Please install manually: pacman -S ${missing_tools[*]}"
@@ -382,15 +420,79 @@ manual_partition() {
         exit 1
     fi
     
-    # Let user select partitions
+    # Let user select partitions with validation
     local boot_part root_part
-    boot_part=$(printf '%s\n' "${partitions[@]}" | gum choose --header="Select EFI/Boot partition:")
-    root_part=$(printf '%s\n' "${partitions[@]}" | gum choose --header="Select Root partition:")
     
-    if [[ "$boot_part" == "$root_part" ]]; then
-        log_error "Boot and root partitions cannot be the same"
-        exit 1
-    fi
+    # Select boot partition with validation
+    local boot_selection_attempts=0
+    local max_selection_attempts=3
+    
+    while [[ $boot_selection_attempts -lt $max_selection_attempts ]]; do
+        boot_selection_attempts=$((boot_selection_attempts + 1))
+        log_info "Select EFI/Boot partition (attempt $boot_selection_attempts of $max_selection_attempts):"
+        
+        boot_part=$(printf '%s\n' "${partitions[@]}" | gum choose --header="Select EFI/Boot partition:")
+        
+        if [[ -z "$boot_part" ]]; then
+            log_error "No boot partition selected"
+            if [[ $boot_selection_attempts -lt $max_selection_attempts ]]; then
+                log_warning "Please select a valid partition. Retrying..."
+                continue
+            else
+                log_error "Failed to select boot partition after $max_selection_attempts attempts"
+                exit 1
+            fi
+        elif [[ ! -b "$boot_part" ]]; then
+            log_error "Selected boot partition '$boot_part' is not a valid block device"
+            if [[ $boot_selection_attempts -lt $max_selection_attempts ]]; then
+                continue
+            else
+                exit 1
+            fi
+        else
+            log_success "Boot partition selected: $boot_part"
+            break
+        fi
+    done
+    
+    # Select root partition with validation
+    local root_selection_attempts=0
+    
+    while [[ $root_selection_attempts -lt $max_selection_attempts ]]; do
+        root_selection_attempts=$((root_selection_attempts + 1))
+        log_info "Select root partition (attempt $root_selection_attempts of $max_selection_attempts):"
+        
+        root_part=$(printf '%s\n' "${partitions[@]}" | gum choose --header="Select Root partition:")
+        
+        if [[ -z "$root_part" ]]; then
+            log_error "No root partition selected"
+            if [[ $root_selection_attempts -lt $max_selection_attempts ]]; then
+                log_warning "Please select a valid partition. Retrying..."
+                continue
+            else
+                log_error "Failed to select root partition after $max_selection_attempts attempts"
+                exit 1
+            fi
+        elif [[ ! -b "$root_part" ]]; then
+            log_error "Selected root partition '$root_part' is not a valid block device"
+            if [[ $root_selection_attempts -lt $max_selection_attempts ]]; then
+                continue
+            else
+                exit 1
+            fi
+        elif [[ "$boot_part" == "$root_part" ]]; then
+            log_error "Boot and root partitions cannot be the same"
+            if [[ $root_selection_attempts -lt $max_selection_attempts ]]; then
+                log_warning "Please select a different partition for root. Retrying..."
+                continue
+            else
+                exit 1
+            fi
+        else
+            log_success "Root partition selected: $root_part"
+            break
+        fi
+    done
     
     # Validate EFI System Partition
     log_info "Validating EFI System Partition..."
@@ -433,8 +535,28 @@ manual_partition() {
     
     if [[ "$root_fstype" == "unknown" || "$root_fstype" == "" ]]; then
         log_warning "Root partition ($root_part) appears unformatted"
+        
         local fs_choice
-        fs_choice=$(echo -e "ext4\nbtrfs" | gum choose --header="Choose filesystem for root partition:")
+        local fs_attempts=0
+        local max_fs_attempts=3
+        
+        while [[ $fs_attempts -lt $max_fs_attempts ]]; do
+            fs_attempts=$((fs_attempts + 1))
+            fs_choice=$(echo -e "ext4\nbtrfs" | gum choose --header="Choose filesystem for root partition:")
+            
+            if [[ -z "$fs_choice" ]]; then
+                log_error "No filesystem selected"
+                if [[ $fs_attempts -lt $max_fs_attempts ]]; then
+                    log_warning "Please select a filesystem type. Retrying..."
+                    continue
+                else
+                    log_error "Failed to select filesystem after $max_fs_attempts attempts"
+                    exit 1
+                fi
+            else
+                break
+            fi
+        done
         
         case "$fs_choice" in
             "ext4")
@@ -467,12 +589,14 @@ install_base_system() {
     local root_part
     local boot_part
     
-    # Load partition information from config
-    root_part=$(load_install_state "OSVMARCHI_ROOT_PART")
-    boot_part=$(load_install_state "OSVMARCHI_BOOT_PART")
+    # Load partition information from config with error handling
+    if ! root_part=$(load_install_state "OSVMARCHI_ROOT_PART"); then
+        log_error "Failed to load root partition information from configuration"
+        exit 1
+    fi
     
-    if [[ -z "$root_part" || -z "$boot_part" ]]; then
-        log_error "Partition information not found in configuration"
+    if ! boot_part=$(load_install_state "OSVMARCHI_BOOT_PART"); then
+        log_error "Failed to load boot partition information from configuration"
         exit 1
     fi
     
@@ -514,10 +638,8 @@ configure_base_system() {
     
     # Get partition information
     local root_part
-    root_part=$(load_install_state "OSVMARCHI_ROOT_PART")
-    
-    if [[ -z "$root_part" ]]; then
-        log_error "Root partition information not found"
+    if ! root_part=$(load_install_state "OSVMARCHI_ROOT_PART"); then
+        log_error "Failed to load root partition information"
         exit 1
     fi
     
@@ -603,6 +725,10 @@ echo "user:\$TEMP_PASSWORD" | chpasswd
 echo "TEMP_USER_PASSWORD=\$TEMP_PASSWORD" > /etc/osvmarchi-first-login.info
 chmod 600 /etc/osvmarchi-first-login.info
 
+# Also save to host system for immediate display
+echo "TEMP_USER_PASSWORD=\$TEMP_PASSWORD" > /tmp/osvmarchi-temp-password.info
+chmod 600 /tmp/osvmarchi-temp-password.info
+
 echo "Base system configuration complete"
 echo "SECURITY: User password is randomly generated and must be changed on first login"
 echo "SECURITY: Root account is locked for security"
@@ -612,6 +738,28 @@ EOF
     chmod +x /mnt/configure_system.sh
     arch-chroot /mnt /configure_system.sh
     rm /mnt/configure_system.sh
+    
+    # Display temporary password immediately after generation
+    local temp_password_now
+    if [[ -f /tmp/osvmarchi-temp-password.info ]]; then
+        temp_password_now=$(grep "TEMP_USER_PASSWORD=" /tmp/osvmarchi-temp-password.info | cut -d'=' -f2)
+        if [[ -n "$temp_password_now" ]]; then
+            echo
+            log_warning "IMPORTANT: Temporary user password generated: $temp_password_now"
+            log_warning "WRITE THIS DOWN - This password must be changed on first login!"
+            log_info "This password will also be shown again after installation completes"
+            echo
+            
+            # Give user time to write it down
+            if gum confirm "Have you written down the temporary password?"; then
+                log_info "Great! Continuing with installation..."
+            else
+                log_warning "Please write down the password: $temp_password_now"
+                read -p "Press Enter when you have written down the password..." -r
+            fi
+        fi
+        rm -f /tmp/osvmarchi-temp-password.info
+    fi
     
     log_success "Base system configuration complete"
 }
@@ -640,11 +788,31 @@ log_error() {
 
 log_info "Downloading OSVMarchi installer..."
 
-# Download the installer script
-if ! curl -fsSL -o osvmarchi-boot.sh https://raw.githubusercontent.com/openSVM/osvmarchi/master/boot.sh; then
-    log_error "Failed to download OSVMarchi installer"
-    exit 1
-fi
+# Download the installer script with retry logic
+local download_attempts=0
+local max_download_attempts=3
+local download_success=false
+
+while [[ $download_attempts -lt $max_download_attempts ]] && [[ "$download_success" != "true" ]]; do
+    download_attempts=$((download_attempts + 1))
+    log_info "Download attempt $download_attempts of $max_download_attempts..."
+    
+    if curl -fsSL -o osvmarchi-boot.sh https://raw.githubusercontent.com/openSVM/osvmarchi/master/boot.sh; then
+        download_success=true
+        log_success "OSVMarchi installer downloaded successfully"
+        break
+    else
+        if [[ $download_attempts -lt $max_download_attempts ]]; then
+            log_warning "Download attempt $download_attempts failed, retrying in 5 seconds..."
+            rm -f osvmarchi-boot.sh 2>/dev/null || true
+            sleep 5
+        else
+            log_error "Failed to download OSVMarchi installer after $max_download_attempts attempts"
+            log_info "Possible issues: network connectivity, GitHub availability, or DNS resolution"
+            exit 1
+        fi
+    fi
+done
 
 # Verify the downloaded script is not empty and contains expected content
 if [[ ! -s osvmarchi-boot.sh ]]; then
