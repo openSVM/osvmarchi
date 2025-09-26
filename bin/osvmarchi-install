@@ -5,16 +5,31 @@
 
 set -euo pipefail
 
-# Configuration file for installation state
-INSTALL_CONFIG_FILE="/tmp/osvmarchi-install.conf"
+# Configuration file for installation state - secure location
+INSTALL_CONFIG_DIR="/run/user/$(id -u)/osvmarchi"
+INSTALL_CONFIG_FILE="${INSTALL_CONFIG_DIR}/install.conf"
+
+# Ensure secure config directory
+ensure_secure_config() {
+    if [[ ! -d "$INSTALL_CONFIG_DIR" ]]; then
+        mkdir -p "$INSTALL_CONFIG_DIR"
+        chmod 700 "$INSTALL_CONFIG_DIR"
+    fi
+}
 
 # Save installation state
 save_install_state() {
     local key="$1"
     local value="$2"
     
-    # Create config file if it doesn't exist
-    [[ ! -f "$INSTALL_CONFIG_FILE" ]] && touch "$INSTALL_CONFIG_FILE"
+    # Ensure secure config directory exists
+    ensure_secure_config
+    
+    # Create config file if it doesn't exist with secure permissions
+    if [[ ! -f "$INSTALL_CONFIG_FILE" ]]; then
+        touch "$INSTALL_CONFIG_FILE"
+        chmod 600 "$INSTALL_CONFIG_FILE"
+    fi
     
     # Remove existing key if present
     sed -i "/^${key}=/d" "$INSTALL_CONFIG_FILE"
@@ -35,6 +50,7 @@ load_install_state() {
 # Clean up configuration
 cleanup_install_state() {
     [[ -f "$INSTALL_CONFIG_FILE" ]] && rm -f "$INSTALL_CONFIG_FILE"
+    [[ -d "$INSTALL_CONFIG_DIR" ]] && rmdir "$INSTALL_CONFIG_DIR" 2>/dev/null || true
 }
 
 # Colors for output
@@ -132,7 +148,7 @@ detect_disks() {
     
     # Get list of block devices that are disks (not partitions)
     local disks
-    if ! mapfile -t disks < <(lsblk -dpno NAME,SIZE,MODEL | grep -E '^/dev/(sd|nvme|vd|hd)[a-z]' | head -10); then
+    if ! mapfile -t disks < <(lsblk -dpno NAME,SIZE,MODEL | grep -E '^/dev/(sd[a-z]+|nvme[0-9]+n[0-9]+|vd[a-z]+|hd[a-z]+)$' | head -10); then
         log_error "Failed to detect disks using lsblk"
         exit 1
     fi
@@ -188,7 +204,7 @@ partition_disk() {
         if [[ $line =~ ^(/dev/[^[:space:]]+) ]]; then
             disk_choices+=("${BASH_REMATCH[1]}")
         fi
-    done < <(lsblk -dpno NAME,SIZE,MODEL | grep -E '^/dev/(sd|nvme|vd)[a-z]')
+    done < <(lsblk -dpno NAME,SIZE,MODEL | grep -E '^/dev/(sd[a-z]+|nvme[0-9]+n[0-9]+|vd[a-z]+)$')
     
     if [[ ${#disk_choices[@]} -eq 0 ]]; then
         log_error "No disks available for selection"
@@ -239,13 +255,22 @@ partition_disk() {
 # Automatic partitioning for UEFI systems
 automatic_partition() {
     local disk="$1"
-    log_info "Creating automatic UEFI partition layout on $disk..."
+    log_info "Creating automatic partition layout on $disk..."
     
     # Check if system is UEFI
     if [[ ! -d /sys/firmware/efi ]]; then
         log_error "Automatic partitioning currently only supports UEFI systems"
-        log_info "Please use manual partitioning for BIOS systems"
-        exit 1
+        log_warning "Your system appears to be using BIOS/Legacy boot mode"
+        log_info "BIOS systems require manual partitioning with the following layout:"
+        log_info "1. Create a small boot partition (512MB, ext4, bootable flag)"
+        log_info "2. Create root partition (remaining space, ext4 or btrfs)"
+        log_info ""
+        if gum confirm "Switch to manual partitioning mode for BIOS setup?"; then
+            manual_partition "$disk"
+            return
+        else
+            exit 1
+        fi
     fi
     
     # Safely unmount any existing partitions
@@ -257,14 +282,37 @@ automatic_partition() {
         log_warning "Found mounted partitions, unmounting safely..."
         for mount_point in "${mounted_parts[@]}"; do
             log_info "Unmounting $mount_point"
-            if ! umount "$mount_point" 2>/dev/null; then
-                log_warning "Normal unmount failed, forcing unmount of $mount_point"
-                if ! umount -f "$mount_point" 2>/dev/null; then
-                    log_error "Failed to unmount $mount_point, disk may be busy"
-                    log_info "Please manually unmount all partitions on $disk before continuing"
-                    exit 1
+            
+            # Try normal unmount with retries
+            local attempts=0
+            local max_attempts=3
+            while [[ $attempts -lt $max_attempts ]]; do
+                if umount "$mount_point" 2>/dev/null; then
+                    log_success "Successfully unmounted $mount_point"
+                    break
                 fi
-            fi
+                
+                attempts=$((attempts + 1))
+                if [[ $attempts -lt $max_attempts ]]; then
+                    log_warning "Unmount attempt $attempts failed, waiting 2 seconds before retry..."
+                    sleep 2
+                else
+                    log_warning "Normal unmount failed after $max_attempts attempts"
+                    if gum confirm "Force unmount $mount_point? (This may cause data loss)"; then
+                        if umount -f "$mount_point" 2>/dev/null; then
+                            log_warning "Force unmount successful for $mount_point"
+                            break
+                        else
+                            log_error "Failed to force unmount $mount_point, disk may be busy"
+                            log_info "Please manually unmount all partitions on $disk before continuing"
+                            exit 1
+                        fi
+                    else
+                        log_error "Cannot proceed with mounted partitions"
+                        exit 1
+                    fi
+                fi
+            done
         done
     fi
     
@@ -522,6 +570,11 @@ console-mode max
 editor no
 EOL
 
+# Generate a secure random password
+generate_secure_password() {
+    openssl rand -base64 12 | tr -d "=+/" | cut -c1-16
+}
+
 # Create user
 useradd -m -G wheel -s /bin/bash user
 
@@ -540,11 +593,18 @@ chmod 0440 /etc/sudoers.d/wheel
 # Force password change on first login for user
 chage -d 0 user
 
-# Set a temporary password that must be changed
-echo "user:changeme" | chpasswd
+# Generate secure random password
+TEMP_PASSWORD=\$(openssl rand -base64 12 | tr -d "=+/" | cut -c1-16)
+
+# Set the random password
+echo "user:\$TEMP_PASSWORD" | chpasswd
+
+# Save the password to a secure location for the installer to display
+echo "TEMP_USER_PASSWORD=\$TEMP_PASSWORD" > /etc/osvmarchi-first-login.info
+chmod 600 /etc/osvmarchi-first-login.info
 
 echo "Base system configuration complete"
-echo "SECURITY: User password must be changed on first login"
+echo "SECURITY: User password is randomly generated and must be changed on first login"
 echo "SECURITY: Root account is locked for security"
 EOF
 
@@ -569,8 +629,43 @@ set -e
 sudo -u user bash << 'USEREOF'
 cd /home/user
 
-# Download and install OSVMarchi
-curl -fsSL https://raw.githubusercontent.com/openSVM/osvmarchi/master/boot.sh | bash
+# SECURITY: Download and verify OSVMarchi installer instead of direct execution
+log_info() {
+    echo -e "\033[0;34m[INFO]\033[0m $1"
+}
+
+log_error() {
+    echo -e "\033[0;31m[ERROR]\033[0m $1"
+}
+
+log_info "Downloading OSVMarchi installer..."
+
+# Download the installer script
+if ! curl -fsSL -o osvmarchi-boot.sh https://raw.githubusercontent.com/openSVM/osvmarchi/master/boot.sh; then
+    log_error "Failed to download OSVMarchi installer"
+    exit 1
+fi
+
+# Verify the downloaded script is not empty and contains expected content
+if [[ ! -s osvmarchi-boot.sh ]]; then
+    log_error "Downloaded installer is empty"
+    exit 1
+fi
+
+# Basic verification - check for expected OSVMarchi signatures
+if ! grep -q "OSVMarchi" osvmarchi-boot.sh || ! grep -q "#!/bin/bash" osvmarchi-boot.sh; then
+    log_error "Downloaded installer does not appear to be a valid OSVMarchi script"
+    exit 1
+fi
+
+log_info "Downloaded installer verified, executing..."
+
+# Make executable and run
+chmod +x osvmarchi-boot.sh
+./osvmarchi-boot.sh
+
+# Clean up downloaded script
+rm -f osvmarchi-boot.sh
 
 USEREOF
 
@@ -620,9 +715,22 @@ main() {
     # Clean up temporary configuration
     cleanup_install_state
     
+    # Get the temporary password that was generated
+    local temp_password
+    if [[ -f /mnt/etc/osvmarchi-first-login.info ]]; then
+        temp_password=$(grep "TEMP_USER_PASSWORD=" /mnt/etc/osvmarchi-first-login.info | cut -d'=' -f2)
+    fi
+    
     log_success "OSVMarchi installation completed successfully!"
     log_info "You can now reboot into your new OSVMarchi system"
-    log_warning "IMPORTANT: User password is 'changeme' and MUST be changed on first login"
+    
+    if [[ -n "$temp_password" ]]; then
+        log_warning "IMPORTANT: Temporary user password is: $temp_password"
+        log_warning "This password MUST be changed on first login!"
+    else
+        log_warning "IMPORTANT: Check /etc/osvmarchi-first-login.info for temporary password"
+    fi
+    
     log_info "Root account is locked for security - use sudo for administrative tasks"
     
     if gum confirm "Reboot now?"; then
@@ -704,7 +812,7 @@ test_mode() {
         if [[ $line =~ ^(/dev/[^[:space:]]+) ]]; then
             disk_choices+=("${BASH_REMATCH[1]}")
         fi
-    done < <(lsblk -dpno NAME,SIZE,MODEL | grep -E '^/dev/(sd|nvme|vd|hd)[a-z]')
+    done < <(lsblk -dpno NAME,SIZE,MODEL | grep -E '^/dev/(sd[a-z]+|nvme[0-9]+n[0-9]+|vd[a-z]+|hd[a-z]+)$')
     
     log_info "Available disks for installation:"
     printf '  %s\n' "${disk_choices[@]}"

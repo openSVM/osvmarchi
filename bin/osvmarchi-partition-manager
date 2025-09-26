@@ -28,6 +28,21 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Check prerequisites
+check_prerequisites() {
+    local missing_tools=()
+    
+    if ! command -v gum &>/dev/null; then
+        missing_tools+=("gum")
+    fi
+    
+    if [[ ${#missing_tools[@]} -gt 0 ]]; then
+        log_error "Missing required tools: ${missing_tools[*]}"
+        log_info "Please install missing tools: pacman -S ${missing_tools[*]}"
+        exit 1
+    fi
+}
+
 # Show available disks
 show_disks() {
     log_info "Available disks:"
@@ -51,6 +66,9 @@ show_menu() {
 
 # Main function
 main() {
+    # Check prerequisites first
+    check_prerequisites
+    
     while true; do
         clear
         show_disks
