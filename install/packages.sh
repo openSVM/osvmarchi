@@ -1,6 +1,26 @@
+#!/bin/bash
+# OSVMarchi Package Installation - Modularized
+# This file now sources individual package modules for better maintainability
+
+# Get the script directory
+SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+# Source individual package modules
+echo "Installing base packages..."
+source "${SCRIPT_DIR}/packages-base.sh"
+
+echo "Installing desktop packages..."  
+source "${SCRIPT_DIR}/packages-desktop.sh"
+
+echo "Installing development packages..."
+source "${SCRIPT_DIR}/packages-development.sh"
+
+echo "Installing optional packages..."
+source "${SCRIPT_DIR}/packages-optional.sh"
+
+# Continue with the original monolithic installation for compatibility
+# TODO: Migrate remaining packages to modular structure
 sudo pacman -S --noconfirm --needed \
-  1password-beta \
-  1password-cli \
   alacritty \
   arch-install-scripts \
   avahi \

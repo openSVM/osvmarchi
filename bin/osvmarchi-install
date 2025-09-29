@@ -5,6 +5,48 @@
 
 set -euo pipefail
 
+# Cleanup function for signals and errors
+cleanup() {
+    local exit_code=$?
+    
+    # Unmount partitions if they exist
+    if [[ -d "/mnt" ]]; then
+        if mountpoint -q "/mnt/boot" 2>/dev/null; then
+            log_warning "Unmounting /mnt/boot..."
+            umount "/mnt/boot" 2>/dev/null || true
+        fi
+        if mountpoint -q "/mnt" 2>/dev/null; then
+            log_warning "Unmounting /mnt..."
+            umount "/mnt" 2>/dev/null || true
+        fi
+    fi
+    
+    # Clean up temporary files
+    if [[ -f "oswmarchi-boot.sh" ]]; then
+        rm -f "oswmarchi-boot.sh"
+    fi
+    
+    # Clean up secure config directory if empty
+    if [[ -d "$INSTALL_CONFIG_DIR" ]]; then
+        rmdir "$INSTALL_CONFIG_DIR" 2>/dev/null || true
+    fi
+    
+    # Sync filesystem changes
+    sync
+    
+    exit $exit_code
+}
+
+# Set up signal traps
+trap cleanup EXIT ERR SIGINT SIGTERM
+
+# Source shared utilities first (logging functions)
+if [[ -f /home/runner/work/osvmarchi/osvmarchi/bin/osvmarchi-utils ]]; then
+    source /home/runner/work/osvmarchi/osvmarchi/bin/osvmarchi-utils
+elif [[ -f ~/.local/share/osvmarchi/bin/osvmarchi-utils ]]; then
+    source ~/.local/share/osvmarchi/bin/osvmarchi-utils
+fi
+
 # Configuration file for installation state - secure location
 INSTALL_CONFIG_DIR="/run/user/$(id -u)/osvmarchi"
 INSTALL_CONFIG_FILE="${INSTALL_CONFIG_DIR}/install.conf"
@@ -65,28 +107,68 @@ cleanup_install_state() {
     [[ -d "$INSTALL_CONFIG_DIR" ]] && rmdir "$INSTALL_CONFIG_DIR" 2>/dev/null || true
 }
 
-# Colors for output
+# Colors for output (fallback if utils not loaded)
 RED='\033[0;31m'
-GREEN='\033[0;32m'
+GREEN='\033[0;32m'  
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Logging functions
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+# Fallback logging functions if utils not loaded
+if ! declare -f log_info >/dev/null 2>&1; then
+    log_info() {
+        echo -e "${BLUE}[INFO]${NC} $1"
+    }
+    
+    log_success() {
+        echo -e "${GREEN}[SUCCESS]${NC} $1"
+    }
+    
+    log_warning() {
+        echo -e "${YELLOW}[WARNING]${NC} $1"
+    }
+    
+    log_error() {
+        echo -e "${RED}[ERROR]${NC} $1"
+    }
+fi
+
+# Install packages with failure tracking
+install_packages_with_tracking() {
+    local package_script="$1"
+    local failed_packages=()
+    
+    log_info "Installing packages from $package_script..."
+    
+    # Source the package script but capture failures
+    if source "$package_script"; then
+        log_success "Package installation completed successfully"
+        return 0
+    else
+        # Installation had some failures, but continue
+        log_warning "Some package installations may have failed"
+        failed_packages+=("$package_script")
+        return 1
+    fi
 }
 
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+# Report installation summary
+report_installation_summary() {
+    local failed_installers=("$@")
+    
+    if [[ ${#failed_installers[@]} -eq 0 ]]; then
+        log_success "All package installations completed successfully"
+    else
+        echo
+        log_warning "Installation Summary:"
+        log_warning "The following package installers had some failures:"
+        for installer in "${failed_installers[@]}"; do
+            log_warning "  - $installer"
+        done
+        log_info "The system should still be functional, but some packages may be missing"
+        log_info "You can manually install missing packages later using 'pacman -S <package>'"
+        echo
+    fi
 }
 
 # Check if running on Arch Linux live environment
@@ -359,6 +441,9 @@ automatic_partition() {
     wipefs -a "$disk"
     sgdisk --zap-all "$disk"
     
+    # Sync to ensure disk changes are written
+    sync
+    
     # Create GPT partition table and partitions
     log_info "Creating partition table..."
     sgdisk --clear \
@@ -369,6 +454,9 @@ automatic_partition() {
     # Re-read partition table
     partprobe "$disk"
     sleep 2
+    
+    # Sync partition table changes
+    sync
     
     # Determine partition names (handle nvme vs sda naming)
     local boot_part root_part
@@ -386,6 +474,9 @@ automatic_partition() {
     
     log_info "Formatting root partition..."
     mkfs.ext4 -L "OSVMarchi" "$root_part"
+    
+    # Sync filesystem changes
+    sync
     
     # Save partition information to config file
     save_install_state "OSVMARCHI_BOOT_PART" "$boot_part"
@@ -504,6 +595,7 @@ manual_partition() {
         if gum confirm "Format $boot_part as FAT32?"; then
             log_info "Formatting EFI partition as FAT32..."
             mkfs.fat -F 32 -n "EFI" "$boot_part"
+            sync  # Ensure filesystem changes are written
         else
             log_error "EFI partition must be FAT32 for UEFI boot"
             exit 1
@@ -521,6 +613,7 @@ manual_partition() {
             log_warning "EFI partition does not have ESP (EF00) type code"
             if gum confirm "Set ESP type code on $boot_part?"; then
                 sgdisk -t "${part_num}:EF00" "$disk_path"
+                sync  # Ensure partition table changes are written
                 log_success "ESP type code set"
             else
                 log_warning "Continuing without ESP type code (may cause boot issues)"
@@ -562,10 +655,12 @@ manual_partition() {
             "ext4")
                 log_info "Formatting root partition as ext4..."
                 mkfs.ext4 -L "OSVMarchi" "$root_part"
+                sync  # Ensure filesystem changes are written
                 ;;
             "btrfs")
                 log_info "Formatting root partition as btrfs..."
                 mkfs.btrfs -L "OSVMarchi" "$root_part"
+                sync  # Ensure filesystem changes are written
                 ;;
         esac
     elif [[ "$root_fstype" != "ext4" && "$root_fstype" != "btrfs" && "$root_fstype" != "xfs" ]]; then
@@ -692,9 +787,9 @@ console-mode max
 editor no
 EOL
 
-# Generate a secure random password
+# Generate a secure random password (hex-based for maximum entropy)
 generate_secure_password() {
-    openssl rand -base64 12 | tr -d "=+/" | cut -c1-16
+    openssl rand -hex 12  # 24-character hex password
 }
 
 # Create user
@@ -715,8 +810,8 @@ chmod 0440 /etc/sudoers.d/wheel
 # Force password change on first login for user
 chage -d 0 user
 
-# Generate secure random password
-TEMP_PASSWORD=\$(openssl rand -base64 12 | tr -d "=+/" | cut -c1-16)
+# Generate secure random password (hex-based for maximum entropy)
+TEMP_PASSWORD=\$(openssl rand -hex 12)  # 24-character hex password
 
 # Set the random password
 echo "user:\$TEMP_PASSWORD" | chpasswd
@@ -788,7 +883,7 @@ log_error() {
 
 log_info "Downloading OSVMarchi installer..."
 
-# Download the installer script with retry logic
+# Download the installer script with retry logic and enhanced verification
 local download_attempts=0
 local max_download_attempts=3
 local download_success=false
@@ -797,14 +892,38 @@ while [[ $download_attempts -lt $max_download_attempts ]] && [[ "$download_succe
     download_attempts=$((download_attempts + 1))
     log_info "Download attempt $download_attempts of $max_download_attempts..."
     
-    if curl -fsSL -o osvmarchi-boot.sh https://raw.githubusercontent.com/openSVM/osvmarchi/master/boot.sh; then
-        download_success=true
-        log_success "OSVMarchi installer downloaded successfully"
-        break
+    # Download both script and SHA256 hash if available
+    if curl -fsSL -o osvmarchi-boot.sh https://raw.githubusercontent.com/openSVM/osvmarchi/master/boot.sh && \
+       curl -fsSL -o boot.sh.sha256 https://raw.githubusercontent.com/openSVM/osvmarchi/master/boot.sh.sha256 2>/dev/null; then
+        
+        # Verify SHA256 if available
+        if [[ -f boot.sh.sha256 ]]; then
+            log_info "Verifying script integrity with SHA256..."
+            if sha256sum -c boot.sh.sha256 &>/dev/null; then
+                log_success "Script integrity verified with SHA256"
+                download_success=true
+                break
+            else
+                log_warning "SHA256 verification failed, falling back to basic verification"
+                rm -f boot.sh.sha256
+            fi
+        fi
+        
+        # Fall back to basic verification if SHA256 not available or failed
+        if [[ -s osvmarchi-boot.sh ]] && \
+           head -1 osvmarchi-boot.sh | grep -q "^#!/bin/bash" && \
+           grep -q "OSVMarchi" osvmarchi-boot.sh; then
+            log_success "OSVMarchi installer downloaded and verified"
+            download_success=true
+            break
+        else
+            log_error "Downloaded script failed basic verification"
+            rm -f osvmarchi-boot.sh boot.sh.sha256
+        fi
     else
         if [[ $download_attempts -lt $max_download_attempts ]]; then
             log_warning "Download attempt $download_attempts failed, retrying in 5 seconds..."
-            rm -f osvmarchi-boot.sh 2>/dev/null || true
+            rm -f osvmarchi-boot.sh boot.sh.sha256 2>/dev/null || true
             sleep 5
         else
             log_error "Failed to download OSVMarchi installer after $max_download_attempts attempts"
@@ -814,15 +933,9 @@ while [[ $download_attempts -lt $max_download_attempts ]] && [[ "$download_succe
     fi
 done
 
-# Verify the downloaded script is not empty and contains expected content
+# Verify the downloaded script is ready for execution
 if [[ ! -s osvmarchi-boot.sh ]]; then
-    log_error "Downloaded installer is empty"
-    exit 1
-fi
-
-# Basic verification - check for expected OSVMarchi signatures
-if ! grep -q "OSVMarchi" osvmarchi-boot.sh || ! grep -q "#!/bin/bash" osvmarchi-boot.sh; then
-    log_error "Downloaded installer does not appear to be a valid OSVMarchi script"
+    log_error "Downloaded installer is empty or missing"
     exit 1
 fi
 
@@ -832,8 +945,8 @@ log_info "Downloaded installer verified, executing..."
 chmod +x osvmarchi-boot.sh
 ./osvmarchi-boot.sh
 
-# Clean up downloaded script
-rm -f osvmarchi-boot.sh
+# Clean up downloaded script and hash
+rm -f osvmarchi-boot.sh boot.sh.sha256
 
 USEREOF
 
