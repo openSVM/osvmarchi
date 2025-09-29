@@ -1,0 +1,434 @@
+#!/bin/bash
+
+# OSVMarchi Specialized Tools Installer
+# Installs microVMs, unikernels, sandboxes, automation, android dev, gamedev, browsers, and specialized tools
+
+set -euo pipefail
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Check if yay is available
+check_yay() {
+    if ! command -v yay &>/dev/null; then
+        log_error "yay AUR helper is required but not installed"
+        log_info "Please install yay first: pacman -S yay"
+        exit 1
+    fi
+}
+
+# Install MicroVMs, Unikernels, and Sandboxes
+install_microvms_sandboxes() {
+    log_info "Installing MicroVMs, Unikernels, and Sandboxes..."
+    
+    local vm_packages=(
+        "firejail"                   # Sandbox program
+        "bubblewrap"                 # Low-level sandboxing tool
+        "firecracker"                # MicroVM technology
+        "cloud-hypervisor-bin"       # Cloud-native hypervisor
+        "kata-containers"            # Secure container runtime
+        "gvisor-bin"                 # Application kernel for containers
+        "crun"                       # Fast container runtime
+        "runc"                       # Container runtime (already installed)
+        "systemd-nspawn"             # Container tool (part of systemd)
+    )
+    
+    for pkg in "${vm_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Install Container Alternatives and Orchestration
+install_container_alternatives() {
+    log_info "Installing Container Alternatives..."
+    
+    local container_packages=(
+        "podman"                     # Docker alternative (already in core)
+        "buildah"                    # Container image builder
+        "skopeo"                     # Container image operations
+        "k3s-bin"                    # Lightweight Kubernetes
+        "k0s-bin"                    # Zero friction Kubernetes
+        "microk8s"                   # Canonical's Kubernetes
+        "kind-bin"                   # Kubernetes in Docker
+        "minikube"                   # Local Kubernetes
+        "lima-bin"                   # Linux VMs on macOS/Linux
+    )
+    
+    for pkg in "${container_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Install TUI and Terminal Tools
+install_tui_tools() {
+    log_info "Installing TUI and Terminal Tools..."
+    
+    local tui_packages=(
+        "zellij"                     # Terminal multiplexer (already in core)
+        "tmux"                       # Terminal multiplexer
+        "screen"                     # Terminal multiplexer
+        "mux"                        # Modern terminal multiplexer
+        "mcfly"                      # Shell history search
+        "atuin"                      # Shell history replacement
+        "navi"                       # Command-line cheatsheet tool
+        "tealdeer"                   # tldr replacement
+        "broot"                      # Directory tree explorer
+        "lf"                         # Terminal file manager
+        "ranger"                     # Terminal file manager
+        "vifm"                       # Vi-like file manager
+    )
+    
+    for pkg in "${tui_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Install Browser Automation and Alternative Browsers
+install_browsers_automation() {
+    log_info "Installing Browsers and Automation Tools..."
+    
+    local browser_packages=(
+        "firefox"                    # Firefox (already in core)
+        "firefox-developer-edition" # Firefox Dev Edition
+        "chromium"                   # Chromium browser
+        "brave-bin"                  # Brave browser
+        "librewolf-bin"              # Privacy-focused Firefox
+        "tor-browser"                # Tor browser
+        "lynx"                       # Text browser (already in core)
+        "w3m"                        # Text browser
+        "links"                      # Text browser
+        "playwright"                 # Browser automation
+        "puppeteer"                  # Chrome automation
+        "selenium-python"            # Web automation
+        "chromedriver"               # Chrome WebDriver
+        "geckodriver"                # Firefox WebDriver
+    )
+    
+    for pkg in "${browser_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Install Android Development Tools
+install_android_dev() {
+    log_info "Installing Android Development Tools..."
+    
+    local android_packages=(
+        "android-studio"             # Android IDE
+        "android-tools"              # ADB and fastboot
+        "android-sdk"                # Android SDK
+        "android-sdk-platform-tools" # Platform tools
+        "android-sdk-build-tools"    # Build tools
+        "gradle"                     # Build system
+        "flutter"                    # Cross-platform framework
+        "dart"                       # Dart language
+        "react-native-debugger-bin"  # React Native debugger
+        "scrcpy"                     # Android screen mirroring
+        "genymotion"                 # Android emulator
+    )
+    
+    for pkg in "${android_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Install Game Development Tools
+install_gamedev() {
+    log_info "Installing Game Development Tools..."
+    
+    local gamedev_packages=(
+        "godot"                      # Game engine
+        "blender"                    # 3D creation suite
+        "unity-editor"               # Unity game engine
+        "unreal-engine"              # Unreal Engine
+        "defold"                     # 2D game engine
+        "libgdx"                     # Java game framework
+        "love"                       # 2D game framework (Lua)
+        "raylib"                     # Game programming library
+        "sfml"                       # Multimedia library
+        "allegro"                    # Game programming library
+        "aseprite"                   # Pixel art editor
+        "krita"                      # Digital painting
+        "gimp"                       # Image editor
+        "audacity"                   # Audio editor
+        "ardour"                     # Digital audio workstation
+    )
+    
+    for pkg in "${gamedev_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Install Alternative Editors and IDEs
+install_alternative_editors() {
+    log_info "Installing Alternative Editors and IDEs..."
+    
+    local editor_packages=(
+        "emacs"                      # Emacs editor
+        "vim"                        # Vim editor
+        "kakoune"                    # Kakoune editor
+        "micro"                      # Modern terminal editor
+        "nano"                       # Simple editor
+        "joe"                        # Joe's editor
+        "sublime-text-4"             # Sublime Text
+        "atom"                       # Atom editor
+        "brackets-bin"               # Brackets editor
+        "kate"                       # KDE text editor
+        "gedit"                      # GNOME text editor
+        "mousepad"                   # Xfce text editor
+        "notepadqq"                  # Notepad++ alternative
+        "typora"                     # Markdown editor (already in core)
+        "mark-text"                  # Markdown editor
+        "obsidian"                   # Knowledge management
+    )
+    
+    for pkg in "${editor_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Install Automation and Agent Tools
+install_automation_agents() {
+    log_info "Installing Automation and Agent Tools..."
+    
+    local automation_packages=(
+        "ansible"                    # IT automation
+        "terraform"                  # Infrastructure as code (already in modern-dev)
+        "vagrant"                    # Development environment
+        "packer"                     # Machine image builder
+        "saltstack"                  # Configuration management
+        "puppet"                     # Configuration management
+        "chef"                       # Configuration management
+        "jenkins"                    # CI/CD automation
+        "github-actions-runner"      # GitHub Actions runner
+        "gitlab-runner"              # GitLab CI runner
+        "drone-cli"                  # Drone CI CLI
+        "n8n-desktop-bin"            # Workflow automation
+        "zapier-cli"                 # Zapier automation
+        "actionsflow"                # Workflow automation
+    )
+    
+    for pkg in "${automation_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Show installation summary
+show_summary() {
+    echo
+    log_success "Specialized Tools Installation Complete!"
+    echo
+    log_info "Installed MicroVMs & Sandboxes:"
+    log_info "• firejail, bubblewrap - Application sandboxing"
+    log_info "• firecracker, cloud-hypervisor - MicroVMs"
+    log_info "• kata-containers, gvisor - Secure containers"
+    echo
+    log_info "Container Alternatives:"
+    log_info "• podman, buildah, skopeo - Docker alternatives (already installed)"
+    log_info "• k3s, k0s, microk8s - Lightweight Kubernetes"
+    log_info "• kind, minikube - Local Kubernetes"
+    echo
+    log_info "TUI & Terminal Tools:"
+    log_info "• zellij, tmux, screen - Terminal multiplexers (zellij already installed)"
+    log_info "• atuin, mcfly - Shell history enhancement"
+    log_info "• lf, ranger, vifm - Terminal file managers"
+    echo
+    log_info "Browsers & Automation:"
+    log_info "• firefox, chromium, brave - Modern browsers (firefox already installed)"
+    log_info "• playwright, puppeteer, selenium - Browser automation"
+    log_info "• lynx, w3m, links - Terminal browsers (lynx already installed)"
+    echo
+    log_info "Android Development:"
+    log_info "• android-studio, android-tools - Android development"
+    log_info "• flutter, dart - Cross-platform development"
+    log_info "• scrcpy - Android screen mirroring"
+    echo
+    log_info "Game Development:"
+    log_info "• godot, blender - Game engines and 3D tools"
+    log_info "• aseprite, krita - Art and graphics tools"
+    log_info "• audacity, ardour - Audio tools"
+    echo
+    log_info "Alternative Editors:"
+    log_info "• emacs, vim, kakoune - Traditional editors"
+    log_info "• sublime-text, atom - Modern GUI editors"
+    log_info "• obsidian, mark-text - Knowledge management"
+    echo
+    log_info "Automation & Agents:"
+    log_info "• ansible, vagrant, packer - Infrastructure automation"
+    log_info "• jenkins, github-actions-runner - CI/CD"
+    log_info "• n8n-desktop, actionsflow - Workflow automation"
+    echo
+    log_warning "Note: Some tools may require additional setup or licenses"
+    log_info "Check individual tool documentation for configuration details"
+}
+
+# Main installation function
+main() {
+    log_info "Starting Specialized Tools Installation..."
+    echo
+    
+    # Check prerequisites
+    check_yay
+    
+    # Install in categories
+    install_microvms_sandboxes
+    echo
+    install_container_alternatives
+    echo
+    install_tui_tools
+    echo
+    install_browsers_automation
+    echo
+    install_android_dev
+    echo
+    install_gamedev
+    echo
+    install_alternative_editors
+    echo
+    install_automation_agents
+    echo
+    
+    # Update package database
+    log_info "Updating package database..."
+    sudo updatedb
+    
+    # Show summary
+    show_summary
+}
+
+# Show help
+show_help() {
+    cat << EOF
+OSVMarchi Specialized Tools Installer
+
+This script installs specialized development tools across multiple domains.
+
+USAGE:
+    $0 [OPTIONS]
+
+OPTIONS:
+    -h, --help      Show this help message
+
+TOOLS INSTALLED:
+    MicroVMs & Sandboxes:
+    • firejail, bubblewrap - Application sandboxing
+    • firecracker, cloud-hypervisor - MicroVMs
+    • kata-containers, gvisor - Secure containers
+    
+    Container Alternatives:
+    • podman, buildah, skopeo - Docker alternatives
+    • k3s, k0s, microk8s - Lightweight Kubernetes
+    • kind, minikube - Local Kubernetes
+    
+    TUI & Terminal:
+    • zellij, tmux, screen - Terminal multiplexers
+    • atuin, mcfly - Shell history enhancement
+    • lf, ranger, vifm - Terminal file managers
+    
+    Browsers & Automation:
+    • Multiple browsers (Firefox, Chromium, Brave, etc.)
+    • Browser automation (Playwright, Puppeteer, Selenium)
+    • Terminal browsers (lynx, w3m, links)
+    
+    Android Development:
+    • android-studio, android-tools
+    • flutter, dart - Cross-platform development
+    • scrcpy - Android screen mirroring
+    
+    Game Development:
+    • godot, blender - Game engines and 3D tools
+    • aseprite, krita - Art and graphics tools
+    • audacity, ardour - Audio tools
+    
+    Alternative Editors:
+    • emacs, vim, kakoune - Traditional editors
+    • sublime-text, atom - Modern GUI editors
+    • obsidian, mark-text - Knowledge management
+    
+    Automation & Agents:
+    • ansible, vagrant, packer - Infrastructure
+    • jenkins, github-actions-runner - CI/CD
+    • n8n-desktop, actionsflow - Workflow automation
+
+EXAMPLES:
+    $0              # Install all specialized tools
+    $0 --help       # Show this help
+
+EOF
+}
+
+# Parse command line arguments
+case "${1:-}" in
+    -h|--help)
+        show_help
+        exit 0
+        ;;
+    "")
+        main
+        ;;
+    *)
+        log_error "Unknown option: $1"
+        echo "Use '$0 --help' for usage information"
+        exit 1
+        ;;
+esac

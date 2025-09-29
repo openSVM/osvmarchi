@@ -35,6 +35,8 @@ sudo pacman -S --noconfirm --needed \
   fcitx5-qt \
   fd \
   ffmpegthumbnailer \
+  firefox \
+  flatpak \
   fzf \
   gcc14 \
   git-delta \
@@ -71,6 +73,7 @@ sudo pacman -S --noconfirm --needed \
   llvm \
   localsend \
   luarocks \
+  lynx \
   mako \
   man \
   mariadb-libs \
@@ -99,6 +102,8 @@ sudo pacman -S --noconfirm --needed \
   perf \
   pkgconf \
   plymouth \
+  podman \
+  protobuf \
   polkit-gnome \
   postgresql-libs \
   power-profiles-daemon \
@@ -149,4 +154,5 @@ sudo pacman -S --noconfirm --needed \
   xournalpp \
 #  yaru-icon-theme \
   yay \
+  zellij \
   zoxide
