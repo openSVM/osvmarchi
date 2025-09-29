@@ -6,6 +6,7 @@ sudo pacman -S --noconfirm --needed \
   avahi \
   bash-completion \
   bat \
+  bcc-tools \
   blueberry \
   brightnessctl \
   btrfs-progs \
@@ -14,6 +15,7 @@ sudo pacman -S --noconfirm --needed \
   cfdisk \
   clang \
   clickhouse \
+  cmake \
   cups \
   cups-browsed \
   cups-filters \
@@ -35,6 +37,7 @@ sudo pacman -S --noconfirm --needed \
   ffmpegthumbnailer \
   fzf \
   gcc14 \
+  git-delta \
   gparted \
   gptfdisk \
   github-cli \
@@ -55,6 +58,7 @@ sudo pacman -S --noconfirm --needed \
   imv \
   inetutils \
   jq \
+  just \
   kdenlive \
   kubectl \
   kubernetes \
@@ -70,10 +74,14 @@ sudo pacman -S --noconfirm --needed \
   mako \
   man \
   mariadb-libs \
+  meson \
   mise \
   msedit \
   mpv \
   nautilus \
+  neovim \
+  nodejs \
+  npm \
   noto-fonts \
   noto-fonts-cjk \
   noto-fonts-emoji \
@@ -88,6 +96,8 @@ sudo pacman -S --noconfirm --needed \
 #  pinta \
   playerctl \
   plocate \
+  perf \
+  pkgconf \
   plymouth \
   polkit-gnome \
   postgresql-libs \
@@ -99,6 +109,7 @@ sudo pacman -S --noconfirm --needed \
   ripgrep \
   rocksdb \
   rust \
+  rust-analyzer \
   satty \
   signal-desktop \
   slurp \
@@ -110,6 +121,7 @@ sudo pacman -S --noconfirm --needed \
   system-config-printer \
   tesseract \
   tldr \
+  tokei \
   tree-sitter-cli \
   ttf-cascadia-mono-nerd \
   ttf-jetbrains-mono \
@@ -120,6 +132,7 @@ sudo pacman -S --noconfirm --needed \
   unzip \
   uwsm \
   virt-manager \
+  vscode \
   walker-bin \
   waybar \
   wf-recorder \
