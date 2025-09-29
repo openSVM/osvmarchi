@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=AI/ML Tools Installer
+Comment=Install comprehensive AI and machine learning tools
+Exec=alacritty -e osvmarchi-install-ai-tools
+Icon=applications-science
+Terminal=false
+Type=Application
+Categories=Development;Science;
+Keywords=ai;ml;machine learning;gpt;llama;stable diffusion;
+StartupNotify=true
+X-GNOME-UsesNotifications=true

@@ -13,6 +13,7 @@ sudo pacman -S --noconfirm --needed \
   cargo \
   cfdisk \
   clang \
+  clickhouse \
   cups \
   cups-browsed \
   cups-filters \
@@ -21,6 +22,7 @@ sudo pacman -S --noconfirm --needed \
   docker-buildx \
   docker-compose \
   dosfstools \
+  distrobox \
   dust \
   e2fsprogs \
   evince \
@@ -54,6 +56,8 @@ sudo pacman -S --noconfirm --needed \
   inetutils \
   jq \
   kdenlive \
+  kubectl \
+  kubernetes \
   kvantum-qt5 \
   lazydocker \
   lazygit \
@@ -78,6 +82,7 @@ sudo pacman -S --noconfirm --needed \
   nvim \
   obs-studio \
   obsidian \
+  onnxruntime \
   osvmarchi-chromium \
   pamixer \
 #  pinta \
@@ -90,7 +95,10 @@ sudo pacman -S --noconfirm --needed \
   python-gobject \
   python-poetry-core \
   python-terminaltexteffects \
+  python-transformers \
   ripgrep \
+  rocksdb \
+  rust \
   satty \
   signal-desktop \
   slurp \
@@ -100,6 +108,7 @@ sudo pacman -S --noconfirm --needed \
   swaybg \
   swayosd \
   system-config-printer \
+  tesseract \
   tldr \
   tree-sitter-cli \
   ttf-cascadia-mono-nerd \
@@ -110,6 +119,7 @@ sudo pacman -S --noconfirm --needed \
   ufw-docker \
   unzip \
   uwsm \
+  virt-manager \
   walker-bin \
   waybar \
   wf-recorder \
