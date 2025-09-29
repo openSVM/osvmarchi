@@ -218,10 +218,16 @@ echo "This ISO contains OSVMarchi pre-configured for $arch processors."
 echo "Run 'osvmarchi-install' to begin installation on this system."
 echo
 
-# Make OSVMarchi available
+# Make OSVMarchi installer available
 if [[ -d /etc/osvmarchi ]]; then
-    ln -sf /etc/osvmarchi/boot.sh /usr/local/bin/osvmarchi-install
+    # Use the new system installer instead of boot.sh
+    ln -sf /etc/osvmarchi/bin/osvmarchi-install /usr/local/bin/osvmarchi-install
     chmod +x /usr/local/bin/osvmarchi-install
+    
+    # Also make GParted easily accessible
+    if command -v gparted &>/dev/null; then
+        ln -sf /usr/bin/gparted /usr/local/bin/partition-disk
+    fi
 fi
 EOF
     

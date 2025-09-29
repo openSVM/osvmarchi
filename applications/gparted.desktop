@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=GParted
+Comment=Partition Editor
+Exec=gparted
+Icon=gparted
+Terminal=false
+Type=Application
+Categories=System;Filesystem;
+Keywords=partition;disk;filesystem;
+StartupNotify=true
+X-GNOME-UsesNotifications=true

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Specialized Dev Tools
+Comment=Install microVMs, sandboxes, automation, gamedev, android dev tools
+Exec=alacritty -e osvmarchi-install-specialized-tools
+Icon=applications-games
+Terminal=false
+Type=Application
+Categories=Development;System;Game;
+Keywords=microvm;sandbox;android;gamedev;automation;browser;editor;
+StartupNotify=true
+X-GNOME-UsesNotifications=true

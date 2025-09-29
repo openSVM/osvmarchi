@@ -1,0 +1,335 @@
+#!/bin/bash
+
+# OSVMarchi Modern Development Tools Installer
+# Installs cutting-edge development tools and modern utilities
+
+set -euo pipefail
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Check if yay is available
+check_yay() {
+    if ! command -v yay &>/dev/null; then
+        log_error "yay AUR helper is required but not installed"
+        log_info "Please install yay first: pacman -S yay"
+        exit 1
+    fi
+}
+
+# Install Modern Text Editors and IDEs
+install_modern_editors() {
+    log_info "Installing Modern Text Editors and IDEs..."
+    
+    local editor_packages=(
+        "cursor-bin"                 # AI-powered code editor
+        "zed"                        # High-performance code editor
+        "helix"                      # Modal text editor with built-in LSP
+        "lapce-bin"                  # Lightning-fast Rust-based editor
+        "fleet-bin"                  # JetBrains next-gen IDE
+    )
+    
+    for pkg in "${editor_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Install Advanced Terminal Tools
+install_terminal_tools() {
+    log_info "Installing Advanced Terminal Tools..."
+    
+    local terminal_packages=(
+        "starship"                   # Cross-shell prompt (already installed)
+        "zoxide"                     # Smarter cd command
+        "procs"                      # Modern replacement for ps
+        "bottom"                     # Alternative to htop/top
+        "hyperfine"                  # Command-line benchmarking tool (already installed)
+        "gping"                      # Ping with graph
+        "grex"                       # Generate regex from examples
+        "choose"                     # Alternative to cut/awk
+        "sd"                         # Intuitive find & replace CLI
+    )
+    
+    for pkg in "${terminal_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Install Modern Build Tools and Language Servers
+install_build_tools() {
+    log_info "Installing Modern Build Tools and Language Servers..."
+    
+    local build_packages=(
+        "bazel"                      # Fast, scalable build system
+        "ninja"                      # Small build system focused on speed
+        "sccache"                    # Compilation caching
+        "ccache"                     # Compiler cache
+        "typescript-language-server" # TypeScript LSP
+        "pyright"                    # Python language server
+        "gopls"                      # Go language server
+        "taplo-cli"                  # TOML language server
+        "yaml-language-server"       # YAML language server
+    )
+    
+    for pkg in "${build_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Install Git and Development Workflow Tools
+install_git_tools() {
+    log_info "Installing Git and Development Workflow Tools..."
+    
+    local git_packages=(
+        "lazygit"                    # Terminal UI for git (already installed)
+        "gitui"                      # Terminal UI for git commands
+        "gh"                         # GitHub CLI (already installed)
+        "glab"                       # GitLab CLI
+        "git-cliff"                  # Changelog generator
+        "conventional-commits"       # Conventional commits tool
+        "cocogitto"                  # Conventional commits toolchain
+    )
+    
+    for pkg in "${git_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Install Performance and Debugging Tools
+install_perf_tools() {
+    log_info "Installing Performance and Debugging Tools..."
+    
+    local perf_packages=(
+        "flamegraph"                 # Flame graph profiler
+        "bandwhich"                  # Network utilization by process
+        "dust"                       # Disk usage analyzer (already installed)
+        "dua-cli"                    # Disk usage analyzer
+        "oha"                        # HTTP load testing tool
+        "drill"                      # HTTP load testing
+        "hey"                        # HTTP load generator
+    )
+    
+    for pkg in "${perf_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Install Cloud and DevOps Tools
+install_cloud_tools() {
+    log_info "Installing Cloud and DevOps Tools..."
+    
+    local cloud_packages=(
+        "terraform"                  # Infrastructure as code
+        "helm"                       # Kubernetes package manager
+        "k9s"                        # Kubernetes CLI manager
+        "kubectx"                    # Kubernetes context switcher
+        "stern"                      # Multi-pod log tailing
+        "dive"                       # Docker image layer explorer
+        "ctop"                       # Container metrics
+        "lazydocker"                 # Docker TUI (already installed)
+    )
+    
+    for pkg in "${cloud_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Show installation summary
+show_summary() {
+    echo
+    log_success "Modern Development Tools Installation Complete!"
+    echo
+    log_info "Installed Modern Editors:"
+    log_info "• cursor-bin - AI-powered code editor"
+    log_info "• zed - High-performance code editor"
+    log_info "• helix - Modal editor with built-in LSP"
+    log_info "• lapce-bin - Lightning-fast Rust editor"
+    log_info "• vscode - Visual Studio Code (already installed)"
+    log_info "• neovim - Modern Vim (already installed)"
+    echo
+    log_info "Advanced Terminal Tools:"
+    log_info "• zoxide - Smarter cd command"
+    log_info "• procs - Modern ps replacement"
+    log_info "• bottom - Advanced system monitor"
+    log_info "• gping - Ping with graph"
+    log_info "• sd - Intuitive find & replace"
+    echo
+    log_info "Build Tools & Language Servers:"
+    log_info "• bazel - Fast, scalable build system"
+    log_info "• sccache - Compilation caching"
+    log_info "• rust-analyzer - Rust LSP (already installed)"
+    log_info "• typescript-language-server - TypeScript LSP"
+    log_info "• pyright - Python language server"
+    echo
+    log_info "Git & Workflow Tools:"
+    log_info "• gitui - Terminal UI for git"
+    log_info "• glab - GitLab CLI"
+    log_info "• git-cliff - Changelog generator"
+    log_info "• cocogitto - Conventional commits"
+    echo
+    log_info "Performance & Debugging:"
+    log_info "• flamegraph - Flame graph profiler"
+    log_info "• bandwhich - Network utilization"
+    log_info "• oha - HTTP load testing"
+    log_info "• perf - Performance profiling (already installed)"
+    echo
+    log_info "Cloud & DevOps:"
+    log_info "• terraform - Infrastructure as code"
+    log_info "• helm - Kubernetes package manager"
+    log_info "• k9s - Kubernetes CLI manager"
+    log_info "• dive - Docker image explorer"
+    echo
+    log_warning "Note: Some tools may require additional setup or configuration"
+    log_info "Check individual tool documentation for usage details"
+}
+
+# Main installation function
+main() {
+    log_info "Starting Modern Development Tools Installation..."
+    echo
+    
+    # Check prerequisites
+    check_yay
+    
+    # Install in categories
+    install_modern_editors
+    echo
+    install_terminal_tools
+    echo
+    install_build_tools
+    echo
+    install_git_tools
+    echo
+    install_perf_tools
+    echo
+    install_cloud_tools
+    echo
+    
+    # Update package database
+    log_info "Updating package database..."
+    sudo updatedb
+    
+    # Show summary
+    show_summary
+}
+
+# Show help
+show_help() {
+    cat << EOF
+OSVMarchi Modern Development Tools Installer
+
+This script installs cutting-edge development tools and modern utilities.
+
+USAGE:
+    $0 [OPTIONS]
+
+OPTIONS:
+    -h, --help      Show this help message
+
+TOOLS INSTALLED:
+    Modern Editors:
+    • cursor-bin - AI-powered code editor
+    • zed - High-performance code editor  
+    • helix - Modal editor with built-in LSP
+    • lapce-bin - Lightning-fast Rust editor
+    • fleet-bin - JetBrains next-gen IDE
+    
+    Terminal Tools:
+    • zoxide - Smarter cd command
+    • procs - Modern ps replacement
+    • bottom - Advanced system monitor
+    • gping - Ping with graph
+    • sd - Intuitive find & replace
+    
+    Build Tools:
+    • bazel - Fast, scalable build system
+    • sccache - Compilation caching
+    • Various language servers (TypeScript, Python, Go, etc.)
+    
+    Git & Workflow:
+    • gitui - Terminal UI for git
+    • glab - GitLab CLI
+    • git-cliff - Changelog generator
+    
+    Performance:
+    • flamegraph - Flame graph profiler
+    • bandwhich - Network utilization
+    • oha - HTTP load testing
+    
+    Cloud & DevOps:
+    • terraform - Infrastructure as code
+    • helm - Kubernetes package manager
+    • k9s - Kubernetes CLI manager
+
+EXAMPLES:
+    $0              # Install all modern dev tools
+    $0 --help       # Show this help
+
+EOF
+}
+
+# Parse command line arguments
+case "${1:-}" in
+    -h|--help)
+        show_help
+        exit 0
+        ;;
+    "")
+        main
+        ;;
+    *)
+        log_error "Unknown option: $1"
+        echo "Use '$0 --help' for usage information"
+        exit 1
+        ;;
+esac

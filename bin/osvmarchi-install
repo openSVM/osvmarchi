@@ -1,0 +1,1129 @@
+#!/bin/bash
+
+# OSVMarchi System Installer
+# Full system installation with GUI disk partitioning
+
+set -euo pipefail
+
+# Cleanup function for signals and errors
+cleanup() {
+    local exit_code=$?
+    
+    # Unmount partitions if they exist
+    if [[ -d "/mnt" ]]; then
+        if mountpoint -q "/mnt/boot" 2>/dev/null; then
+            log_warning "Unmounting /mnt/boot..."
+            umount "/mnt/boot" 2>/dev/null || true
+        fi
+        if mountpoint -q "/mnt" 2>/dev/null; then
+            log_warning "Unmounting /mnt..."
+            umount "/mnt" 2>/dev/null || true
+        fi
+    fi
+    
+    # Clean up temporary files
+    if [[ -f "oswmarchi-boot.sh" ]]; then
+        rm -f "oswmarchi-boot.sh"
+    fi
+    
+    # Clean up secure config directory if empty
+    if [[ -d "$INSTALL_CONFIG_DIR" ]]; then
+        rmdir "$INSTALL_CONFIG_DIR" 2>/dev/null || true
+    fi
+    
+    # Sync filesystem changes
+    sync
+    
+    exit $exit_code
+}
+
+# Set up signal traps
+trap cleanup EXIT ERR SIGINT SIGTERM
+
+# Source shared utilities first (logging functions)
+if [[ -f /home/runner/work/osvmarchi/osvmarchi/bin/osvmarchi-utils ]]; then
+    source /home/runner/work/osvmarchi/osvmarchi/bin/osvmarchi-utils
+elif [[ -f ~/.local/share/osvmarchi/bin/osvmarchi-utils ]]; then
+    source ~/.local/share/osvmarchi/bin/osvmarchi-utils
+fi
+
+# Configuration file for installation state - secure location
+INSTALL_CONFIG_DIR="/run/user/$(id -u)/osvmarchi"
+INSTALL_CONFIG_FILE="${INSTALL_CONFIG_DIR}/install.conf"
+
+# Ensure secure config directory
+ensure_secure_config() {
+    if [[ ! -d "$INSTALL_CONFIG_DIR" ]]; then
+        mkdir -p "$INSTALL_CONFIG_DIR"
+        chmod 700 "$INSTALL_CONFIG_DIR"
+    fi
+}
+
+# Save installation state
+save_install_state() {
+    local key="$1"
+    local value="$2"
+    
+    # Ensure secure config directory exists
+    ensure_secure_config
+    
+    # Create config file if it doesn't exist with secure permissions
+    if [[ ! -f "$INSTALL_CONFIG_FILE" ]]; then
+        touch "$INSTALL_CONFIG_FILE"
+        chmod 600 "$INSTALL_CONFIG_FILE"
+    fi
+    
+    # Remove existing key if present
+    sed -i "/^${key}=/d" "$INSTALL_CONFIG_FILE"
+    
+    # Add new key=value
+    echo "${key}=${value}" >> "$INSTALL_CONFIG_FILE"
+}
+
+# Load installation state
+load_install_state() {
+    local key="$1"
+    
+    if [[ -f "$INSTALL_CONFIG_FILE" ]]; then
+        local value
+        value=$(grep "^${key}=" "$INSTALL_CONFIG_FILE" | cut -d'=' -f2-)
+        
+        if [[ -z "$value" ]]; then
+            log_error "Configuration key '$key' not found or empty"
+            return 1
+        fi
+        
+        echo "$value"
+        return 0
+    else
+        log_error "Configuration file not found: $INSTALL_CONFIG_FILE"
+        return 1
+    fi
+}
+
+# Clean up configuration
+cleanup_install_state() {
+    [[ -f "$INSTALL_CONFIG_FILE" ]] && rm -f "$INSTALL_CONFIG_FILE"
+    [[ -d "$INSTALL_CONFIG_DIR" ]] && rmdir "$INSTALL_CONFIG_DIR" 2>/dev/null || true
+}
+
+# Colors for output (fallback if utils not loaded)
+RED='\033[0;31m'
+GREEN='\033[0;32m'  
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Fallback logging functions if utils not loaded
+if ! declare -f log_info >/dev/null 2>&1; then
+    log_info() {
+        echo -e "${BLUE}[INFO]${NC} $1"
+    }
+    
+    log_success() {
+        echo -e "${GREEN}[SUCCESS]${NC} $1"
+    }
+    
+    log_warning() {
+        echo -e "${YELLOW}[WARNING]${NC} $1"
+    }
+    
+    log_error() {
+        echo -e "${RED}[ERROR]${NC} $1"
+    }
+fi
+
+# Install packages with failure tracking
+install_packages_with_tracking() {
+    local package_script="$1"
+    local failed_packages=()
+    
+    log_info "Installing packages from $package_script..."
+    
+    # Source the package script but capture failures
+    if source "$package_script"; then
+        log_success "Package installation completed successfully"
+        return 0
+    else
+        # Installation had some failures, but continue
+        log_warning "Some package installations may have failed"
+        failed_packages+=("$package_script")
+        return 1
+    fi
+}
+
+# Report installation summary
+report_installation_summary() {
+    local failed_installers=("$@")
+    
+    if [[ ${#failed_installers[@]} -eq 0 ]]; then
+        log_success "All package installations completed successfully"
+    else
+        echo
+        log_warning "Installation Summary:"
+        log_warning "The following package installers had some failures:"
+        for installer in "${failed_installers[@]}"; do
+            log_warning "  - $installer"
+        done
+        log_info "The system should still be functional, but some packages may be missing"
+        log_info "You can manually install missing packages later using 'pacman -S <package>'"
+        echo
+    fi
+}
+
+# Check if running on Arch Linux live environment
+check_live_environment() {
+    if [[ ! -f /etc/arch-release ]]; then
+        log_error "This installer must be run on Arch Linux"
+        exit 1
+    fi
+    
+    # Check if we're in a live environment (multiple detection methods)
+    local is_live=false
+    
+    # Method 1: Check for archiso
+    if [[ -d /run/archiso ]] || [[ -f /run/archiso/bootmnt/arch/boot/x86_64/vmlinuz-linux ]]; then
+        is_live=true
+    fi
+    
+    # Method 2: Check for live boot indicator
+    if grep -q "archisobasedir" /proc/cmdline 2>/dev/null; then
+        is_live=true
+    fi
+    
+    # Method 3: Check if root filesystem is tmpfs/overlay
+    if mount | grep -q "/ type tmpfs\|/ type overlay"; then
+        is_live=true
+    fi
+    
+    if [[ "$is_live" != "true" ]]; then
+        log_warning "Not detected as Arch Linux live environment"
+        log_warning "This installer is designed for live environments"
+        log_warning "Running on installed systems may cause data loss!"
+        if ! gum confirm "Continue anyway? (NOT RECOMMENDED)"; then
+            exit 1
+        fi
+    fi
+}
+
+# Check prerequisites
+check_prerequisites() {
+    local missing_tools=()
+    
+    for tool in gparted gum; do
+        if ! command -v "$tool" &>/dev/null; then
+            missing_tools+=("$tool")
+        fi
+    done
+    
+    if [[ ${#missing_tools[@]} -gt 0 ]]; then
+        log_error "Missing required tools: ${missing_tools[*]}"
+        log_warning "The following tools need to be installed: ${missing_tools[*]}"
+        
+        if gum confirm "Install missing tools now? (Requires internet connection)"; then
+            log_info "Installing missing tools..."
+            
+            # Add retry logic for pacman installation
+            local install_attempts=0
+            local max_install_attempts=3
+            local install_success=false
+            
+            while [[ $install_attempts -lt $max_install_attempts ]] && [[ "$install_success" != "true" ]]; do
+                install_attempts=$((install_attempts + 1))
+                log_info "Installation attempt $install_attempts of $max_install_attempts..."
+                
+                if pacman -Sy --noconfirm "${missing_tools[@]}"; then
+                    install_success=true
+                    log_success "Tools installed successfully"
+                    break
+                else
+                    if [[ $install_attempts -lt $max_install_attempts ]]; then
+                        log_warning "Installation attempt $install_attempts failed, retrying in 3 seconds..."
+                        sleep 3
+                    else
+                        log_error "Failed to install required tools after $max_install_attempts attempts"
+                        log_info "Possible issues: network connectivity, package mirrors, or disk space"
+                        log_info "Please try manually: pacman -Sy && pacman -S ${missing_tools[*]}"
+                        
+                        if gum confirm "Continue without installing tools? (Installation may fail)"; then
+                            log_warning "Continuing without required tools - installation may fail"
+                            break
+                        else
+                            exit 1
+                        fi
+                    fi
+                fi
+            done
+        else
+            log_error "Cannot proceed without required tools"
+            log_info "Please install manually: pacman -S ${missing_tools[*]}"
+            exit 1
+        fi
+    fi
+}
+
+# Detect available disks
+detect_disks() {
+    log_info "Detecting available disks..."
+    
+    # Get list of block devices that are disks (not partitions)
+    local disks
+    if ! mapfile -t disks < <(lsblk -dpno NAME,SIZE,MODEL | grep -E '^/dev/(sd[a-z]+|nvme[0-9]+n[0-9]+|vd[a-z]+|hd[a-z]+)$' | head -10); then
+        log_error "Failed to detect disks using lsblk"
+        exit 1
+    fi
+    
+    # Filter out removable devices (USB drives) unless explicitly requested
+    local filtered_disks=()
+    for disk_line in "${disks[@]}"; do
+        local disk_path=$(echo "$disk_line" | awk '{print $1}')
+        local disk_name=$(basename "$disk_path")
+        
+        # Check if disk is removable
+        local removable="0"
+        if [[ -f "/sys/block/$disk_name/removable" ]]; then
+            removable=$(cat "/sys/block/$disk_name/removable")
+        fi
+        
+        # Include non-removable disks or warn about removable ones
+        if [[ "$removable" == "0" ]]; then
+            filtered_disks+=("$disk_line")
+        else
+            log_warning "Skipping removable device: $disk_path"
+        fi
+    done
+    
+    # Use filtered disks or fall back to all disks if none found
+    if [[ ${#filtered_disks[@]} -eq 0 ]]; then
+        log_warning "No non-removable disks found, showing all available disks"
+        filtered_disks=("${disks[@]}")
+    fi
+    
+    if [[ ${#filtered_disks[@]} -eq 0 ]]; then
+        log_error "No suitable disks found for installation"
+        log_info "Available block devices:"
+        lsblk -f
+        exit 1
+    fi
+    
+    log_info "Found ${#filtered_disks[@]} suitable disk(s):"
+    printf '%s\n' "${filtered_disks[@]}"
+    echo
+}
+
+# Interactive disk selection and partitioning
+partition_disk() {
+    log_info "Starting disk partitioning..."
+    
+    # Detect disks first
+    detect_disks
+    
+    # Get list of disks for selection
+    local disk_choices=()
+    while IFS= read -r line; do
+        if [[ $line =~ ^(/dev/[^[:space:]]+) ]]; then
+            disk_choices+=("${BASH_REMATCH[1]}")
+        fi
+    done < <(lsblk -dpno NAME,SIZE,MODEL | grep -E '^/dev/(sd[a-z]+|nvme[0-9]+n[0-9]+|vd[a-z]+)$')
+    
+    if [[ ${#disk_choices[@]} -eq 0 ]]; then
+        log_error "No disks available for selection"
+        exit 1
+    fi
+    
+    # Let user choose disk
+    local selected_disk
+    if [[ ${#disk_choices[@]} -eq 1 ]]; then
+        selected_disk="${disk_choices[0]}"
+        log_info "Only one disk available: $selected_disk"
+        if ! gum confirm "Use $selected_disk for installation?"; then
+            log_error "Installation cancelled"
+            exit 1
+        fi
+    else
+        log_info "Multiple disks found. Please select one:"
+        selected_disk=$(printf '%s\n' "${disk_choices[@]}" | gum choose --header="Select disk for OSVMarchi installation:")
+    fi
+    
+    log_info "Selected disk: $selected_disk"
+    
+    # Warn about data loss
+    log_warning "WARNING: All data on $selected_disk will be DESTROYED!"
+    log_warning "This action cannot be undone!"
+    
+    if ! gum confirm "Are you absolutely sure you want to continue?"; then
+        log_error "Installation cancelled"
+        exit 1
+    fi
+    
+    # Offer partitioning options
+    local partition_method
+    partition_method=$(echo -e "Automatic (Recommended)\nManual (GParted)" | gum choose --header="Choose partitioning method:")
+    
+    case "$partition_method" in
+        "Automatic (Recommended)")
+            automatic_partition "$selected_disk"
+            ;;
+        "Manual (GParted)")
+            manual_partition "$selected_disk"
+            ;;
+    esac
+    
+    echo "$selected_disk"
+}
+
+# Automatic partitioning for UEFI systems
+automatic_partition() {
+    local disk="$1"
+    log_info "Creating automatic partition layout on $disk..."
+    
+    # Check if system is UEFI
+    if [[ ! -d /sys/firmware/efi ]]; then
+        log_error "Automatic partitioning currently only supports UEFI systems"
+        log_warning "Your system appears to be using BIOS/Legacy boot mode"
+        log_info "BIOS systems require manual partitioning with the following layout:"
+        log_info "1. Create a small boot partition (512MB, ext4, bootable flag)"
+        log_info "2. Create root partition (remaining space, ext4 or btrfs)"
+        log_info ""
+        if gum confirm "Switch to manual partitioning mode for BIOS setup?"; then
+            manual_partition "$disk"
+            return
+        else
+            exit 1
+        fi
+    fi
+    
+    # Safely unmount any existing partitions
+    log_info "Checking for mounted partitions on $disk..."
+    local mounted_parts
+    mapfile -t mounted_parts < <(findmnt -rno TARGET,SOURCE | grep "^/.*$disk" | awk '{print $1}' | sort -r)
+    
+    if [[ ${#mounted_parts[@]} -gt 0 ]]; then
+        log_warning "Found mounted partitions, unmounting safely..."
+        for mount_point in "${mounted_parts[@]}"; do
+            log_info "Unmounting $mount_point"
+            
+            # Try normal unmount with retries
+            local attempts=0
+            local max_attempts=3
+            while [[ $attempts -lt $max_attempts ]]; do
+                if umount "$mount_point" 2>/dev/null; then
+                    log_success "Successfully unmounted $mount_point"
+                    break
+                fi
+                
+                attempts=$((attempts + 1))
+                if [[ $attempts -lt $max_attempts ]]; then
+                    log_warning "Unmount attempt $attempts failed, waiting 2 seconds before retry..."
+                    sleep 2
+                else
+                    log_warning "Normal unmount failed after $max_attempts attempts"
+                    if gum confirm "Force unmount $mount_point? (This may cause data loss)"; then
+                        if umount -f "$mount_point" 2>/dev/null; then
+                            log_warning "Force unmount successful for $mount_point"
+                            break
+                        else
+                            log_error "Failed to force unmount $mount_point, disk may be busy"
+                            log_info "Please manually unmount all partitions on $disk before continuing"
+                            exit 1
+                        fi
+                    else
+                        log_error "Cannot proceed with mounted partitions"
+                        exit 1
+                    fi
+                fi
+            done
+        done
+    fi
+    
+    # Wipe disk
+    log_info "Wiping disk $disk..."
+    wipefs -a "$disk"
+    sgdisk --zap-all "$disk"
+    
+    # Sync to ensure disk changes are written
+    sync
+    
+    # Create GPT partition table and partitions
+    log_info "Creating partition table..."
+    sgdisk --clear \
+           --new=1:0:+1G --typecode=1:ef00 --change-name=1:'EFI System' \
+           --new=2:0:0 --typecode=2:8300 --change-name=2:'OSVMarchi Root' \
+           "$disk"
+    
+    # Re-read partition table
+    partprobe "$disk"
+    sleep 2
+    
+    # Sync partition table changes
+    sync
+    
+    # Determine partition names (handle nvme vs sda naming)
+    local boot_part root_part
+    if [[ $disk =~ nvme ]]; then
+        boot_part="${disk}p1"
+        root_part="${disk}p2"
+    else
+        boot_part="${disk}1"
+        root_part="${disk}2"
+    fi
+    
+    # Format partitions
+    log_info "Formatting EFI partition..."
+    mkfs.fat -F 32 -n "EFI" "$boot_part"
+    
+    log_info "Formatting root partition..."
+    mkfs.ext4 -L "OSVMarchi" "$root_part"
+    
+    # Sync filesystem changes
+    sync
+    
+    # Save partition information to config file
+    save_install_state "OSVMARCHI_BOOT_PART" "$boot_part"
+    save_install_state "OSVMARCHI_ROOT_PART" "$root_part"
+    
+    log_success "Automatic partitioning complete"
+}
+
+# Manual partitioning with GParted
+manual_partition() {
+    local disk="$1"
+    log_info "Opening GParted for manual partitioning of $disk..."
+    
+    log_info "Please create the following partitions:"
+    log_info "1. EFI System Partition (512MB-1GB, FAT32, esp flag)"
+    log_info "2. Root partition (remaining space, ext4 or btrfs)"
+    log_info ""
+    log_info "Press Enter when ready to open GParted..."
+    read -r
+    
+    # Launch GParted
+    gparted "$disk"
+    
+    log_info "GParted closed. Please specify the created partitions:"
+    
+    # Get available partitions for this disk
+    local partitions
+    mapfile -t partitions < <(lsblk -pno NAME "$disk" | grep -E "${disk}[p]?[0-9]+")
+    
+    if [[ ${#partitions[@]} -lt 2 ]]; then
+        log_error "At least 2 partitions required (EFI + Root)"
+        exit 1
+    fi
+    
+    # Let user select partitions with validation
+    local boot_part root_part
+    
+    # Select boot partition with validation
+    local boot_selection_attempts=0
+    local max_selection_attempts=3
+    
+    while [[ $boot_selection_attempts -lt $max_selection_attempts ]]; do
+        boot_selection_attempts=$((boot_selection_attempts + 1))
+        log_info "Select EFI/Boot partition (attempt $boot_selection_attempts of $max_selection_attempts):"
+        
+        boot_part=$(printf '%s\n' "${partitions[@]}" | gum choose --header="Select EFI/Boot partition:")
+        
+        if [[ -z "$boot_part" ]]; then
+            log_error "No boot partition selected"
+            if [[ $boot_selection_attempts -lt $max_selection_attempts ]]; then
+                log_warning "Please select a valid partition. Retrying..."
+                continue
+            else
+                log_error "Failed to select boot partition after $max_selection_attempts attempts"
+                exit 1
+            fi
+        elif [[ ! -b "$boot_part" ]]; then
+            log_error "Selected boot partition '$boot_part' is not a valid block device"
+            if [[ $boot_selection_attempts -lt $max_selection_attempts ]]; then
+                continue
+            else
+                exit 1
+            fi
+        else
+            log_success "Boot partition selected: $boot_part"
+            break
+        fi
+    done
+    
+    # Select root partition with validation
+    local root_selection_attempts=0
+    
+    while [[ $root_selection_attempts -lt $max_selection_attempts ]]; do
+        root_selection_attempts=$((root_selection_attempts + 1))
+        log_info "Select root partition (attempt $root_selection_attempts of $max_selection_attempts):"
+        
+        root_part=$(printf '%s\n' "${partitions[@]}" | gum choose --header="Select Root partition:")
+        
+        if [[ -z "$root_part" ]]; then
+            log_error "No root partition selected"
+            if [[ $root_selection_attempts -lt $max_selection_attempts ]]; then
+                log_warning "Please select a valid partition. Retrying..."
+                continue
+            else
+                log_error "Failed to select root partition after $max_selection_attempts attempts"
+                exit 1
+            fi
+        elif [[ ! -b "$root_part" ]]; then
+            log_error "Selected root partition '$root_part' is not a valid block device"
+            if [[ $root_selection_attempts -lt $max_selection_attempts ]]; then
+                continue
+            else
+                exit 1
+            fi
+        elif [[ "$boot_part" == "$root_part" ]]; then
+            log_error "Boot and root partitions cannot be the same"
+            if [[ $root_selection_attempts -lt $max_selection_attempts ]]; then
+                log_warning "Please select a different partition for root. Retrying..."
+                continue
+            else
+                exit 1
+            fi
+        else
+            log_success "Root partition selected: $root_part"
+            break
+        fi
+    done
+    
+    # Validate EFI System Partition
+    log_info "Validating EFI System Partition..."
+    local boot_fstype
+    boot_fstype=$(lsblk -no FSTYPE "$boot_part" 2>/dev/null || echo "unknown")
+    
+    if [[ "$boot_fstype" != "vfat" ]]; then
+        log_warning "EFI partition ($boot_part) is not FAT32 (found: $boot_fstype)"
+        if gum confirm "Format $boot_part as FAT32?"; then
+            log_info "Formatting EFI partition as FAT32..."
+            mkfs.fat -F 32 -n "EFI" "$boot_part"
+            sync  # Ensure filesystem changes are written
+        else
+            log_error "EFI partition must be FAT32 for UEFI boot"
+            exit 1
+        fi
+    fi
+    
+    # Check EFI System Partition flag using sgdisk
+    if command -v sgdisk &>/dev/null; then
+        local part_num
+        part_num=$(echo "$boot_part" | grep -o '[0-9]*$')
+        local disk_path
+        disk_path=$(echo "$boot_part" | sed 's/[p]*[0-9]*$//')
+        
+        if ! sgdisk -i "$part_num" "$disk_path" | grep -q "EF00"; then
+            log_warning "EFI partition does not have ESP (EF00) type code"
+            if gum confirm "Set ESP type code on $boot_part?"; then
+                sgdisk -t "${part_num}:EF00" "$disk_path"
+                sync  # Ensure partition table changes are written
+                log_success "ESP type code set"
+            else
+                log_warning "Continuing without ESP type code (may cause boot issues)"
+            fi
+        fi
+    fi
+    
+    # Validate root partition filesystem
+    log_info "Validating root partition..."
+    local root_fstype
+    root_fstype=$(lsblk -no FSTYPE "$root_part" 2>/dev/null || echo "unknown")
+    
+    if [[ "$root_fstype" == "unknown" || "$root_fstype" == "" ]]; then
+        log_warning "Root partition ($root_part) appears unformatted"
+        
+        local fs_choice
+        local fs_attempts=0
+        local max_fs_attempts=3
+        
+        while [[ $fs_attempts -lt $max_fs_attempts ]]; do
+            fs_attempts=$((fs_attempts + 1))
+            fs_choice=$(echo -e "ext4\nbtrfs" | gum choose --header="Choose filesystem for root partition:")
+            
+            if [[ -z "$fs_choice" ]]; then
+                log_error "No filesystem selected"
+                if [[ $fs_attempts -lt $max_fs_attempts ]]; then
+                    log_warning "Please select a filesystem type. Retrying..."
+                    continue
+                else
+                    log_error "Failed to select filesystem after $max_fs_attempts attempts"
+                    exit 1
+                fi
+            else
+                break
+            fi
+        done
+        
+        case "$fs_choice" in
+            "ext4")
+                log_info "Formatting root partition as ext4..."
+                mkfs.ext4 -L "OSVMarchi" "$root_part"
+                sync  # Ensure filesystem changes are written
+                ;;
+            "btrfs")
+                log_info "Formatting root partition as btrfs..."
+                mkfs.btrfs -L "OSVMarchi" "$root_part"
+                sync  # Ensure filesystem changes are written
+                ;;
+        esac
+    elif [[ "$root_fstype" != "ext4" && "$root_fstype" != "btrfs" && "$root_fstype" != "xfs" ]]; then
+        log_warning "Root partition filesystem ($root_fstype) may not be suitable"
+        if ! gum confirm "Continue with $root_fstype filesystem?"; then
+            exit 1
+        fi
+    fi
+    
+    # Save partition information to config file
+    save_install_state "OSVMARCHI_BOOT_PART" "$boot_part"
+    save_install_state "OSVMARCHI_ROOT_PART" "$root_part"
+    
+    log_success "Manual partitioning complete and validated"
+    log_info "Boot partition: $boot_part ($boot_fstype)"
+    log_info "Root partition: $root_part ($root_fstype)"
+}
+
+# Mount partitions and install base system
+install_base_system() {
+    local root_part
+    local boot_part
+    
+    # Load partition information from config with error handling
+    if ! root_part=$(load_install_state "OSVMARCHI_ROOT_PART"); then
+        log_error "Failed to load root partition information from configuration"
+        exit 1
+    fi
+    
+    if ! boot_part=$(load_install_state "OSVMARCHI_BOOT_PART"); then
+        log_error "Failed to load boot partition information from configuration"
+        exit 1
+    fi
+    
+    log_info "Mounting partitions..."
+    log_info "Root: $root_part -> /mnt"
+    log_info "Boot: $boot_part -> /mnt/boot"
+    
+    # Mount root
+    if ! mount "$root_part" /mnt; then
+        log_error "Failed to mount root partition $root_part"
+        exit 1
+    fi
+    
+    # Create and mount boot
+    mkdir -p /mnt/boot
+    if ! mount "$boot_part" /mnt/boot; then
+        log_error "Failed to mount boot partition $boot_part"
+        umount /mnt 2>/dev/null || true
+        exit 1
+    fi
+    
+    log_info "Installing base Arch Linux system..."
+    
+    # Install base system
+    pacstrap /mnt base base-devel linux linux-firmware \
+        networkmanager sudo git gum curl wget \
+        efibootmgr dosfstools e2fsprogs btrfs-progs
+    
+    # Generate fstab
+    log_info "Generating fstab..."
+    genfstab -U /mnt >> /mnt/etc/fstab
+    
+    log_success "Base system installation complete"
+}
+
+# Configure base system
+configure_base_system() {
+    log_info "Configuring base system..."
+    
+    # Get partition information
+    local root_part
+    if ! root_part=$(load_install_state "OSVMARCHI_ROOT_PART"); then
+        log_error "Failed to load root partition information"
+        exit 1
+    fi
+    
+    # Create configuration script that will run in chroot
+    cat > /mnt/configure_system.sh << EOF
+#!/bin/bash
+set -e
+
+# Set timezone
+ln -sf /usr/share/zoneinfo/UTC /etc/localtime
+hwclock --systohc
+
+# Configure locale
+echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+locale-gen
+echo "LANG=en_US.UTF-8" > /etc/locale.conf
+
+# Set hostname
+echo "osvmarchi" > /etc/hostname
+
+# Configure hosts
+cat >> /etc/hosts << EOL
+127.0.0.1   localhost
+::1         localhost
+127.0.1.1   osvmarchi.localdomain osvmarchi
+EOL
+
+# Enable NetworkManager
+systemctl enable NetworkManager
+
+# Install and configure bootloader (systemd-boot)
+bootctl install
+
+# Get root partition UUID for bootloader
+ROOT_PARTUUID=\$(blkid -s PARTUUID -o value $root_part)
+
+# Create bootloader entry
+mkdir -p /boot/loader/entries
+cat > /boot/loader/entries/arch.conf << EOL
+title   OSVMarchi
+linux   /vmlinuz-linux
+initrd  /initramfs-linux.img
+options root=PARTUUID=\$ROOT_PARTUUID rw quiet splash
+EOL
+
+cat > /boot/loader/loader.conf << EOL
+default arch.conf
+timeout 3
+console-mode max
+editor no
+EOL
+
+# Generate a secure random password (hex-based for maximum entropy)
+generate_secure_password() {
+    openssl rand -hex 12  # 24-character hex password
+}
+
+# Create user
+useradd -m -G wheel -s /bin/bash user
+
+# Disable root password and lock account for security
+passwd -l root
+
+# Configure sudo using proper sudoers.d approach
+cat > /etc/sudoers.d/wheel << EOL
+# Allow wheel group to use sudo
+%wheel ALL=(ALL:ALL) ALL
+EOL
+
+# Set secure permissions on sudoers.d file
+chmod 0440 /etc/sudoers.d/wheel
+
+# Force password change on first login for user
+chage -d 0 user
+
+# Generate secure random password (hex-based for maximum entropy)
+TEMP_PASSWORD=\$(openssl rand -hex 12)  # 24-character hex password
+
+# Set the random password
+echo "user:\$TEMP_PASSWORD" | chpasswd
+
+# Save the password to a secure location for the installer to display
+echo "TEMP_USER_PASSWORD=\$TEMP_PASSWORD" > /etc/osvmarchi-first-login.info
+chmod 600 /etc/osvmarchi-first-login.info
+
+# Also save to host system for immediate display
+echo "TEMP_USER_PASSWORD=\$TEMP_PASSWORD" > /tmp/osvmarchi-temp-password.info
+chmod 600 /tmp/osvmarchi-temp-password.info
+
+echo "Base system configuration complete"
+echo "SECURITY: User password is randomly generated and must be changed on first login"
+echo "SECURITY: Root account is locked for security"
+EOF
+
+    # Make script executable and run it
+    chmod +x /mnt/configure_system.sh
+    arch-chroot /mnt /configure_system.sh
+    rm /mnt/configure_system.sh
+    
+    # Display temporary password immediately after generation
+    local temp_password_now
+    if [[ -f /tmp/osvmarchi-temp-password.info ]]; then
+        temp_password_now=$(grep "TEMP_USER_PASSWORD=" /tmp/osvmarchi-temp-password.info | cut -d'=' -f2)
+        if [[ -n "$temp_password_now" ]]; then
+            echo
+            log_warning "IMPORTANT: Temporary user password generated: $temp_password_now"
+            log_warning "WRITE THIS DOWN - This password must be changed on first login!"
+            log_info "This password will also be shown again after installation completes"
+            echo
+            
+            # Give user time to write it down
+            if gum confirm "Have you written down the temporary password?"; then
+                log_info "Great! Continuing with installation..."
+            else
+                log_warning "Please write down the password: $temp_password_now"
+                read -p "Press Enter when you have written down the password..." -r
+            fi
+        fi
+        rm -f /tmp/osvmarchi-temp-password.info
+    fi
+    
+    log_success "Base system configuration complete"
+}
+
+# Install OSVMarchi in chroot
+install_osvmarchi() {
+    log_info "Installing OSVMarchi..."
+    
+    # Create OSVMarchi installation script for chroot
+    cat > /mnt/install_osvmarchi.sh << 'EOF'
+#!/bin/bash
+set -e
+
+# Switch to user account for OSVMarchi installation
+sudo -u user bash << 'USEREOF'
+cd /home/user
+
+# SECURITY: Download and verify OSVMarchi installer instead of direct execution
+log_info() {
+    echo -e "\033[0;34m[INFO]\033[0m $1"
+}
+
+log_error() {
+    echo -e "\033[0;31m[ERROR]\033[0m $1"
+}
+
+log_info "Downloading OSVMarchi installer..."
+
+# Download the installer script with retry logic and enhanced verification
+local download_attempts=0
+local max_download_attempts=3
+local download_success=false
+
+while [[ $download_attempts -lt $max_download_attempts ]] && [[ "$download_success" != "true" ]]; do
+    download_attempts=$((download_attempts + 1))
+    log_info "Download attempt $download_attempts of $max_download_attempts..."
+    
+    # Download both script and SHA256 hash if available
+    if curl -fsSL -o osvmarchi-boot.sh https://raw.githubusercontent.com/openSVM/osvmarchi/master/boot.sh && \
+       curl -fsSL -o boot.sh.sha256 https://raw.githubusercontent.com/openSVM/osvmarchi/master/boot.sh.sha256 2>/dev/null; then
+        
+        # Verify SHA256 if available
+        if [[ -f boot.sh.sha256 ]]; then
+            log_info "Verifying script integrity with SHA256..."
+            if sha256sum -c boot.sh.sha256 &>/dev/null; then
+                log_success "Script integrity verified with SHA256"
+                download_success=true
+                break
+            else
+                log_warning "SHA256 verification failed, falling back to basic verification"
+                rm -f boot.sh.sha256
+            fi
+        fi
+        
+        # Fall back to basic verification if SHA256 not available or failed
+        if [[ -s osvmarchi-boot.sh ]] && \
+           head -1 osvmarchi-boot.sh | grep -q "^#!/bin/bash" && \
+           grep -q "OSVMarchi" osvmarchi-boot.sh; then
+            log_success "OSVMarchi installer downloaded and verified"
+            download_success=true
+            break
+        else
+            log_error "Downloaded script failed basic verification"
+            rm -f osvmarchi-boot.sh boot.sh.sha256
+        fi
+    else
+        if [[ $download_attempts -lt $max_download_attempts ]]; then
+            log_warning "Download attempt $download_attempts failed, retrying in 5 seconds..."
+            rm -f osvmarchi-boot.sh boot.sh.sha256 2>/dev/null || true
+            sleep 5
+        else
+            log_error "Failed to download OSVMarchi installer after $max_download_attempts attempts"
+            log_info "Possible issues: network connectivity, GitHub availability, or DNS resolution"
+            exit 1
+        fi
+    fi
+done
+
+# Verify the downloaded script is ready for execution
+if [[ ! -s osvmarchi-boot.sh ]]; then
+    log_error "Downloaded installer is empty or missing"
+    exit 1
+fi
+
+log_info "Downloaded installer verified, executing..."
+
+# Make executable and run
+chmod +x osvmarchi-boot.sh
+./osvmarchi-boot.sh
+
+# Clean up downloaded script and hash
+rm -f osvmarchi-boot.sh boot.sh.sha256
+
+USEREOF
+
+echo "OSVMarchi installation complete"
+EOF
+
+    # Make script executable and run it
+    chmod +x /mnt/install_osvmarchi.sh
+    arch-chroot /mnt /install_osvmarchi.sh
+    rm /mnt/install_osvmarchi.sh
+    
+    log_success "OSVMarchi installation complete"
+}
+
+# Main installation function
+main() {
+    log_info "Starting OSVMarchi installation..."
+    
+    # Check prerequisites
+    check_live_environment
+    check_prerequisites
+    
+    # Partition disk
+    local selected_disk
+    selected_disk=$(partition_disk)
+    
+    # Install base system
+    install_base_system
+    
+    # Configure base system
+    configure_base_system
+    
+    # Install OSVMarchi
+    install_osvmarchi
+    
+    # Cleanup
+    log_info "Cleaning up..."
+    
+    # Safely unmount all mounted filesystems
+    if mountpoint -q /mnt/boot; then
+        umount /mnt/boot
+    fi
+    if mountpoint -q /mnt; then
+        umount /mnt
+    fi
+    
+    # Clean up temporary configuration
+    cleanup_install_state
+    
+    # Get the temporary password that was generated
+    local temp_password
+    if [[ -f /mnt/etc/osvmarchi-first-login.info ]]; then
+        temp_password=$(grep "TEMP_USER_PASSWORD=" /mnt/etc/osvmarchi-first-login.info | cut -d'=' -f2)
+    fi
+    
+    log_success "OSVMarchi installation completed successfully!"
+    log_info "You can now reboot into your new OSVMarchi system"
+    
+    if [[ -n "$temp_password" ]]; then
+        log_warning "IMPORTANT: Temporary user password is: $temp_password"
+        log_warning "This password MUST be changed on first login!"
+    else
+        log_warning "IMPORTANT: Check /etc/osvmarchi-first-login.info for temporary password"
+    fi
+    
+    log_info "Root account is locked for security - use sudo for administrative tasks"
+    
+    if gum confirm "Reboot now?"; then
+        reboot
+    fi
+}
+
+# Show usage help
+show_help() {
+    cat << EOF
+OSVMarchi System Installer
+
+This script installs OSVMarchi on a fresh disk with automatic or manual partitioning.
+
+USAGE:
+    $0 [OPTIONS]
+
+OPTIONS:
+    -h, --help      Show this help message
+    -t, --test      Test mode (validation only, no installation)
+
+REQUIREMENTS:
+    - Arch Linux live environment (ISO)
+    - UEFI system (for automatic partitioning)
+    - Internet connection
+    - Target disk with sufficient space (20GB+ recommended)
+
+FEATURES:
+    - Automatic UEFI partitioning with sensible defaults
+    - Manual partitioning with GParted GUI
+    - Base Arch Linux installation
+    - Full OSVMarchi configuration
+    - Bootloader setup
+
+PARTITIONING:
+    Automatic mode creates:
+    - 1GB EFI System Partition (FAT32)
+    - Remaining space for root (ext4)
+    
+    Manual mode allows custom partition layouts with GParted.
+
+EXAMPLES:
+    $0                  # Start interactive installation
+    $0 --test          # Test disk detection and validation only
+    $0 --help          # Show this help
+
+EOF
+}
+
+# Test mode - validation only
+test_mode() {
+    log_info "Running OSVMarchi installer in test mode..."
+    
+    # Run all checks without actual installation
+    log_info "Testing live environment detection..."
+    if [[ ! -f /etc/arch-release ]]; then
+        log_error "Not running on Arch Linux"
+    else
+        log_success "Arch Linux detected"
+    fi
+    
+    log_info "Testing prerequisite tools..."
+    local missing_tools=()
+    for tool in gparted gum lsblk; do
+        if command -v "$tool" &>/dev/null; then
+            log_success "$tool: Available"
+        else
+            log_warning "$tool: Missing"
+            missing_tools+=("$tool")
+        fi
+    done
+    
+    log_info "Testing disk detection..."
+    detect_disks
+    
+    log_info "Testing partition detection..."
+    local disk_choices=()
+    while IFS= read -r line; do
+        if [[ $line =~ ^(/dev/[^[:space:]]+) ]]; then
+            disk_choices+=("${BASH_REMATCH[1]}")
+        fi
+    done < <(lsblk -dpno NAME,SIZE,MODEL | grep -E '^/dev/(sd[a-z]+|nvme[0-9]+n[0-9]+|vd[a-z]+|hd[a-z]+)$')
+    
+    log_info "Available disks for installation:"
+    printf '  %s\n' "${disk_choices[@]}"
+    
+    if [[ ${#missing_tools[@]} -eq 0 ]]; then
+        log_success "All tests passed! System ready for installation."
+    else
+        log_warning "Some tools missing: ${missing_tools[*]}"
+        log_info "Run 'pacman -S ${missing_tools[*]}' to install missing tools"
+    fi
+    
+    log_info "Test mode completed. Use '$0' (without --test) to start actual installation."
+}
+
+# Parse command line arguments
+case "${1:-}" in
+    -h|--help)
+        show_help
+        exit 0
+        ;;
+    -t|--test)
+        test_mode
+        exit 0
+        ;;
+    "")
+        main
+        ;;
+    *)
+        log_error "Unknown option: $1"
+        echo "Use '$0 --help' for usage information"
+        exit 1
+        ;;
+esac

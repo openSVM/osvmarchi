@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=OSVMarchi Installer
+Comment=Install OSVMarchi to disk with GUI partitioning
+Exec=alacritty -e osvmarchi-install
+Icon=system-software-install
+Terminal=false
+Type=Application
+Categories=System;Setup;
+Keywords=install;disk;partition;installer;
+StartupNotify=true
+X-GNOME-UsesNotifications=true

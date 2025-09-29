@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Partition Manager
+Comment=Access disk partitioning tools
+Exec=alacritty -e osvmarchi-partition-manager
+Icon=gparted
+Terminal=false
+Type=Application
+Categories=System;Filesystem;
+Keywords=partition;disk;gparted;cfdisk;fdisk;
+StartupNotify=true
+X-GNOME-UsesNotifications=true

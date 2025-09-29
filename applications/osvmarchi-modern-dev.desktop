@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Modern Dev Tools
+Comment=Install cutting-edge development tools and utilities
+Exec=alacritty -e osvmarchi-install-modern-dev
+Icon=applications-development
+Terminal=false
+Type=Application
+Categories=Development;Programming;
+Keywords=dev;development;modern;tools;editor;terminal;git;
+StartupNotify=true
+X-GNOME-UsesNotifications=true

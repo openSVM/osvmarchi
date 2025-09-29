@@ -1,0 +1,212 @@
+#!/bin/bash
+
+# OSVMarchi AI/ML Tools Installer
+# Installs comprehensive AI, ML, and development tools
+
+set -euo pipefail
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Check if yay is available
+check_yay() {
+    if ! command -v yay &>/dev/null; then
+        log_error "yay AUR helper is required but not installed"
+        log_info "Please install yay first: pacman -S yay"
+        exit 1
+    fi
+}
+
+# Install AI/ML Core Tools
+install_ai_core() {
+    log_info "Installing AI/ML Core Tools..."
+    
+    local ai_packages=(
+        "gpt4all"                    # Chat with GPT-like models locally
+        "koboldai"                   # Interactive story/writing AI
+        "text-generation-webui"      # Web front-end for LLMs
+        "llama-cpp"                  # Run Llama/CodeLlama efficiently
+        "ollama-bin"                 # Easy LLM CLI interface
+        "whisper-cpp"                # Fast local speech-to-text
+        "stable-diffusion-webui"     # Stable Diffusion image generation
+    )
+    
+    for pkg in "${ai_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Install AI Development Tools
+install_ai_dev() {
+    log_info "Installing AI Development Libraries..."
+    
+    local dev_packages=(
+        "python-deep-translator"     # Local multi-language translation
+        "onnxruntime"               # ONNX model runtime (already in main packages)
+        "sillytavern-git"           # Chatbot frontend for local LLMs
+        "diffusionbee-bin"          # Easy Stable Diffusion GUI
+    )
+    
+    for pkg in "${dev_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Install Container and VM Tools
+install_container_tools() {
+    log_info "Installing Container and Virtualization Tools..."
+    
+    local container_packages=(
+        "devpod-bin"                # Development environments in containers
+        "qemu"                      # Full system emulation
+        "libvirt"                   # Virtualization management
+        "virt-viewer"               # VM console viewer
+    )
+    
+    for pkg in "${container_packages[@]}"; do
+        log_info "Installing $pkg..."
+        if yay -S --noconfirm --needed "$pkg"; then
+            log_success "$pkg installed successfully"
+        else
+            log_warning "Failed to install $pkg, continuing..."
+        fi
+    done
+}
+
+# Show installation summary
+show_summary() {
+    echo
+    log_success "AI/ML Tools Installation Complete!"
+    echo
+    log_info "Installed AI/ML Tools:"
+    log_info "• gpt4all - Chat with local GPT-like models"
+    log_info "• koboldai - Interactive story/writing AI" 
+    log_info "• text-generation-webui - LLM web interface"
+    log_info "• llama-cpp - Efficient Llama model runner"
+    log_info "• ollama-bin - Easy LLM CLI tool"
+    log_info "• whisper-cpp - Local speech-to-text"
+    log_info "• stable-diffusion-webui - Image generation"
+    echo
+    log_info "Development Tools:"
+    log_info "• python-transformers - HuggingFace library (already installed)"
+    log_info "• onnxruntime - ONNX model runtime (already installed)"
+    log_info "• tesseract - OCR for images/PDFs (already installed)"
+    log_info "• rust - Rust programming language (already installed)"
+    log_info "• clickhouse - Analytics database (already installed)"
+    log_info "• rocksdb - Key-value database (already installed)"
+    echo
+    log_info "Container & VM Tools:"
+    log_info "• docker + docker-compose (already installed)"
+    log_info "• kubernetes + kubectl (already installed)"
+    log_info "• distrobox - Container environments (already installed)"
+    log_info "• virt-manager - VM management (already installed)"
+    echo
+    log_warning "Note: Some AI tools may require additional setup or model downloads"
+    log_info "Check individual tool documentation for configuration details"
+}
+
+# Main installation function
+main() {
+    log_info "Starting AI/ML Tools Installation..."
+    echo
+    
+    # Check prerequisites
+    check_yay
+    
+    # Install in categories
+    install_ai_core
+    echo
+    install_ai_dev
+    echo
+    install_container_tools
+    echo
+    
+    # Update package database
+    log_info "Updating package database..."
+    sudo updatedb
+    
+    # Show summary
+    show_summary
+}
+
+# Show help
+show_help() {
+    cat << EOF
+OSVMarchi AI/ML Tools Installer
+
+This script installs a comprehensive set of AI, machine learning, and development tools.
+
+USAGE:
+    $0 [OPTIONS]
+
+OPTIONS:
+    -h, --help      Show this help message
+
+TOOLS INSTALLED:
+    AI/ML Core:
+    • gpt4all - Local GPT-like chat models
+    • koboldai - Interactive AI for writing
+    • text-generation-webui - LLM web interface
+    • llama-cpp - Llama model runner
+    • ollama-bin - Easy LLM CLI
+    • whisper-cpp - Speech-to-text
+    • stable-diffusion-webui - Image generation
+    
+    Development:
+    • AI development libraries and frameworks
+    • Container and virtualization tools
+    • Database systems (ClickHouse, RocksDB)
+    • Programming languages (Rust, C++)
+
+EXAMPLES:
+    $0              # Install all AI/ML tools
+    $0 --help       # Show this help
+
+EOF
+}
+
+# Parse command line arguments
+case "${1:-}" in
+    -h|--help)
+        show_help
+        exit 0
+        ;;
+    "")
+        main
+        ;;
+    *)
+        log_error "Unknown option: $1"
+        echo "Use '$0 --help' for usage information"
+        exit 1
+        ;;
+esac

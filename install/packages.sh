@@ -1,15 +1,41 @@
+#!/bin/bash
+# OSVMarchi Package Installation - Modularized
+# This file now sources individual package modules for better maintainability
+
+# Get the script directory
+SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+
+# Source individual package modules
+echo "Installing base packages..."
+source "${SCRIPT_DIR}/packages-base.sh"
+
+echo "Installing desktop packages..."  
+source "${SCRIPT_DIR}/packages-desktop.sh"
+
+echo "Installing development packages..."
+source "${SCRIPT_DIR}/packages-development.sh"
+
+echo "Installing optional packages..."
+source "${SCRIPT_DIR}/packages-optional.sh"
+
+# Continue with the original monolithic installation for compatibility
+# TODO: Migrate remaining packages to modular structure
 sudo pacman -S --noconfirm --needed \
-  1password-beta \
-  1password-cli \
   alacritty \
+  arch-install-scripts \
   avahi \
   bash-completion \
   bat \
+  bcc-tools \
   blueberry \
   brightnessctl \
+  btrfs-progs \
   btop \
   cargo \
+  cfdisk \
   clang \
+  clickhouse \
+  cmake \
   cups \
   cups-browsed \
   cups-filters \
@@ -17,7 +43,10 @@ sudo pacman -S --noconfirm --needed \
   docker \
   docker-buildx \
   docker-compose \
+  dosfstools \
+  distrobox \
   dust \
+  e2fsprogs \
   evince \
   eza \
   fastfetch \
@@ -26,8 +55,13 @@ sudo pacman -S --noconfirm --needed \
   fcitx5-qt \
   fd \
   ffmpegthumbnailer \
+  firefox \
+  flatpak \
   fzf \
   gcc14 \
+  git-delta \
+  gparted \
+  gptfdisk \
   github-cli \
   gnome-calculator \
   gnome-keyring \
@@ -46,7 +80,10 @@ sudo pacman -S --noconfirm --needed \
   imv \
   inetutils \
   jq \
+  just \
   kdenlive \
+  kubectl \
+  kubernetes \
   kvantum-qt5 \
   lazydocker \
   lazygit \
@@ -56,12 +93,18 @@ sudo pacman -S --noconfirm --needed \
   llvm \
   localsend \
   luarocks \
+  lynx \
   mako \
   man \
   mariadb-libs \
+  meson \
   mise \
+  msedit \
   mpv \
   nautilus \
+  neovim \
+  nodejs \
+  npm \
   noto-fonts \
   noto-fonts-cjk \
   noto-fonts-emoji \
@@ -70,19 +113,28 @@ sudo pacman -S --noconfirm --needed \
   nvim \
   obs-studio \
   obsidian \
+  onnxruntime \
   osvmarchi-chromium \
   pamixer \
 #  pinta \
   playerctl \
   plocate \
+  perf \
+  pkgconf \
   plymouth \
+  podman \
+  protobuf \
   polkit-gnome \
   postgresql-libs \
   power-profiles-daemon \
   python-gobject \
   python-poetry-core \
   python-terminaltexteffects \
+  python-transformers \
   ripgrep \
+  rocksdb \
+  rust \
+  rust-analyzer \
   satty \
   signal-desktop \
   slurp \
@@ -92,7 +144,9 @@ sudo pacman -S --noconfirm --needed \
   swaybg \
   swayosd \
   system-config-printer \
+  tesseract \
   tldr \
+  tokei \
   tree-sitter-cli \
   ttf-cascadia-mono-nerd \
   ttf-jetbrains-mono \
@@ -102,6 +156,8 @@ sudo pacman -S --noconfirm --needed \
   ufw-docker \
   unzip \
   uwsm \
+  virt-manager \
+  vscode \
   walker-bin \
   waybar \
   wf-recorder \
@@ -118,4 +174,5 @@ sudo pacman -S --noconfirm --needed \
   xournalpp \
 #  yaru-icon-theme \
   yay \
+  zellij \
   zoxide
