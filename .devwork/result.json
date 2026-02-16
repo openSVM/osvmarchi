@@ -1,0 +1,10 @@
+{
+  "success": false,
+  "tasks_total": 5,
+  "tasks_completed": 4,
+  "tasks_failed": 1,
+  "planning_ms": 103318,
+  "execution_ms": 111752,
+  "total_ms": 215232,
+  "error": "Max retries exceeded for task: Git merge command is blocked by the execution environment's safety system which doesn't have merge in its safe list\n\nPartial progress:\n4 of 5 tasks completed successfully before failure.\nCompleted:\n  - Bash\n  - Bash\n  - Bash\n  - Bash\nFailed at: Max retries exceeded for task: Git merge command is blocked by the execution environment's safety system which doesn't have merge in its safe list"
+}

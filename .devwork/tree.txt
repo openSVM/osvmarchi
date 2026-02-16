@@ -1,0 +1,598 @@
+# Directory snapshot before SpecKit execution
+# 1771275760714696539
+
+/tmp/claudev-pr-19750
+├── applications
+│   ├── hidden
+│   │   ├── avahi-discover.desktop
+│   │   ├── bssh.desktop
+│   │   ├── btop.desktop
+│   │   ├── bvnc.desktop
+│   │   ├── cmake-gui.desktop
+│   │   ├── cups.desktop
+│   │   ├── dropbox.desktop
+│   │   ├── electron34.desktop
+│   │   ├── fcitx5-configtool.desktop
+│   │   ├── kbd-layout-viewer5.desktop
+│   │   ├── kcm_fcitx5.desktop
+│   │   ├── kcm_kaccounts.desktop
+│   │   ├── kvantummanager.desktop
+│   │   ├── org.fcitx.fcitx5-config-qt.desktop
+│   │   ├── org.fcitx.Fcitx5.desktop
+│   │   ├── org.fcitx.fcitx5-migrator.desktop
+│   │   ├── org.fcitx.fcitx5-qt5-gui-wrapper.desktop
+│   │   ├── org.fcitx.fcitx5-qt6-gui-wrapper.desktop
+│   │   ├── qv4l2.desktop
+│   │   ├── qvidcap.desktop
+│   │   ├── uuctl.desktop
+│   │   ├── xgps.desktop
+│   │   └── xgpsspeed.desktop
+│   ├── icons
+│   │   └── imv.png
+│   ├── imv.desktop
+│   ├── mpv.desktop
+│   ├── nvim.desktop
+│   └── typora.desktop
+├── bin
+│   ├── osvmarchi-battery-monitor
+│   ├── osvmarchi-cmd-apple-display-brightness
+│   ├── osvmarchi-cmd-audio-switch
+│   ├── osvmarchi-cmd-close-all-windows
+│   ├── osvmarchi-cmd-first-run
+│   ├── osvmarchi-cmd-screenrecord
+│   ├── osvmarchi-cmd-screenrecord-stop
+│   ├── osvmarchi-cmd-screensaver
+│   ├── osvmarchi-cmd-screenshot
+│   ├── osvmarchi-cmd-terminal-cwd
+│   ├── osvmarchi-cmd-tzupdate
+│   ├── osvmarchi-dev-add-migration
+│   ├── osvmarchi-font-current
+│   ├── osvmarchi-font-list
+│   ├── osvmarchi-font-set
+│   ├── osvmarchi-install-dev-env
+│   ├── osvmarchi-install-docker-dbs
+│   ├── osvmarchi-install-dropbox
+│   ├── osvmarchi-install-steam
+│   ├── osvmarchi-install-tailscale
+│   ├── osvmarchi-launch-browser
+│   ├── osvmarchi-launch-floating-terminal-with-presentation
+│   ├── osvmarchi-launch-screensaver
+│   ├── osvmarchi-launch-webapp
+│   ├── osvmarchi-lock-screen
+│   ├── osvmarchi-menu
+│   ├── osvmarchi-menu-keybindings
+│   ├── osvmarchi-migrate
+│   ├── osvmarchi-pkg-aur-accessible
+│   ├── osvmarchi-pkg-aur-install
+│   ├── osvmarchi-pkg-ignored
+│   ├── osvmarchi-pkg-install
+│   ├── osvmarchi-pkg-pinned
+│   ├── osvmarchi-pkg-remove
+│   ├── osvmarchi-powerprofiles-list
+│   ├── osvmarchi-refresh-applications
+│   ├── osvmarchi-refresh-config
+│   ├── osvmarchi-refresh-fastfetch
+│   ├── osvmarchi-refresh-hypridle
+│   ├── osvmarchi-refresh-hyprland
+│   ├── osvmarchi-refresh-hyprlock
+│   ├── osvmarchi-refresh-hyprsunset
+│   ├── osvmarchi-refresh-plymouth
+│   ├── osvmarchi-refresh-swayosd
+│   ├── osvmarchi-refresh-walker
+│   ├── osvmarchi-refresh-waybar
+│   ├── osvmarchi-reset-sudo
+│   ├── osvmarchi-restart-app
+│   ├── osvmarchi-restart-hypridle
+│   ├── osvmarchi-restart-hyprsunset
+│   ├── osvmarchi-restart-swayosd
+│   ├── osvmarchi-restart-walker
+│   ├── osvmarchi-restart-waybar
+│   ├── osvmarchi-restart-xcompose
+│   ├── osvmarchi-setup-dns
+│   ├── osvmarchi-setup-fido2
+│   ├── osvmarchi-setup-fingerprint
+│   ├── osvmarchi-show-done
+│   ├── osvmarchi-show-logo
+│   ├── osvmarchi-snapshot
+│   ├── osvmarchi-state
+│   ├── osvmarchi-theme-bg-next
+│   ├── osvmarchi-theme-current
+│   ├── osvmarchi-theme-install
+│   ├── osvmarchi-theme-list
+│   ├── osvmarchi-theme-next
+│   ├── osvmarchi-theme-remove
+│   ├── osvmarchi-theme-set
+│   ├── osvmarchi-theme-update
+│   ├── osvmarchi-toggle-idle
+│   ├── osvmarchi-toggle-nightlight
+│   ├── osvmarchi-toggle-screensaver
+│   ├── osvmarchi-toggle-waybar
+│   ├── osvmarchi-tui-install
+│   ├── osvmarchi-tui-remove
+│   ├── osvmarchi-update
+│   ├── osvmarchi-update-available
+│   ├── osvmarchi-update-git
+│   ├── osvmarchi-update-restart
+│   ├── osvmarchi-update-system-pkgs
+│   ├── osvmarchi-validate-iso-workflow
+│   ├── osvmarchi-version
+│   ├── osvmarchi-version-branch
+│   ├── osvmarchi-webapp-install
+│   └── osvmarchi-webapp-remove
+├── boot.sh
+├── build-iso.sh
+├── config
+│   ├── alacritty
+│   │   └── alacritty.toml
+│   ├── brave-flags.conf
+│   ├── btop
+│   │   └── btop.conf
+│   ├── chromium
+│   │   └── Default
+│   │       └── Preferences
+│   ├── chromium-flags.conf
+│   ├── environment.d
+│   │   └── fcitx.conf
+│   ├── fastfetch
+│   │   └── config.jsonc
+│   ├── fcitx5
+│   │   └── conf
+│   │       └── xcb.conf
+│   ├── fontconfig
+│   │   └── fonts.conf
+│   ├── hypr
+│   │   ├── autostart.conf
+│   │   ├── bindings.conf
+│   │   ├── envs.conf
+│   │   ├── hypridle.conf
+│   │   ├── hyprland.conf
+│   │   ├── hyprlock.conf
+│   │   ├── hyprsunset.conf
+│   │   ├── input.conf
+│   │   └── monitors.conf
+│   ├── lazygit
+│   │   └── config.yml
+│   ├── nvim
+│   │   ├── lazyvim.json
+│   │   ├── lua
+│   │   │   └── plugins
+│   │   │       ├── snacks-animated-scrolling-off.lua
+│   │   │       └── theme.lua
+│   │   └── plugin
+│   │       └── after
+│   │           └── transparency.lua
+│   ├── osvmarchi.ttf
+│   ├── starship.toml
+│   ├── swayosd
+│   │   ├── config.toml
+│   │   └── style.css
+│   ├── systemd
+│   │   └── user
+│   │       ├── osvmarchi-battery-monitor.service
+│   │       └── osvmarchi-battery-monitor.timer
+│   ├── Typora
+│   │   └── themes
+│   │       ├── ia_typora.css
+│   │       └── ia_typora_night.css
+│   ├── uwsm
+│   │   └── env
+│   ├── walker
+│   │   └── config.toml
+│   ├── waybar
+│   │   ├── config.jsonc
+│   │   └── style.css
+│   └── xournalpp
+│       └── settings.xml
+├── default
+│   ├── alacritty
+│   │   └── screensaver.toml
+│   ├── bash
+│   │   ├── aliases
+│   │   ├── envs
+│   │   ├── functions
+│   │   ├── init
+│   │   ├── inputrc
+│   │   ├── prompt
+│   │   ├── rc
+│   │   └── shell
+│   ├── bashrc
+│   ├── gpg
+│   │   └── dirmngr.conf
+│   ├── hypr
+│   │   ├── apps
+│   │   │   ├── 1password.conf
+│   │   │   ├── browser.conf
+│   │   │   ├── hyprshot.conf
+│   │   │   ├── jetbrains.conf
+│   │   │   ├── pip.conf
+│   │   │   ├── retroarch.conf
+│   │   │   ├── steam.conf
+│   │   │   ├── system.conf
+│   │   │   └── walker.conf
+│   │   ├── apps.conf
+│   │   ├── autostart.conf
+│   │   ├── bindings
+│   │   │   ├── media.conf
+│   │   │   ├── tiling.conf
+│   │   │   └── utilities.conf
+│   │   ├── bindings.conf
+│   │   ├── envs.conf
+│   │   ├── input.conf
+│   │   ├── looknfeel.conf
+│   │   └── windows.conf
+│   ├── plymouth
+│   │   ├── bullet.png
+│   │   ├── entry.png
+│   │   ├── lock.png
+│   │   ├── logo.png
+│   │   ├── osvmarchi.plymouth
+│   │   ├── osvmarchi.script
+│   │   ├── progress_bar.png
+│   │   └── progress_box.png
+│   ├── walker
+│   │   └── themes
+│   │       ├── dmenu_150.css
+│   │       ├── dmenu_150.toml
+│   │       ├── dmenu_250.css
+│   │       ├── dmenu_250.toml
+│   │       ├── keybindings.css
+│   │       ├── keybindings.toml
+│   │       ├── osvmarchi-default.css
+│   │       └── osvmarchi-default.toml
+│   └── xcompose
+├── docs
+│   ├── assets
+│   │   ├── css
+│   │   │   ├── dos-icons.css
+│   │   │   └── far-style.css
+│   │   └── js
+│   │       └── far-interface.js
+│   ├── _config.yml
+│   ├── index.html
+│   ├── ISO_BUILDING.md
+│   └── README.md
+├── icon.txt
+├── install
+│   ├── config
+│   │   ├── branding.sh
+│   │   ├── config.sh
+│   │   ├── detect-keyboard-layout.sh
+│   │   ├── docker.sh
+│   │   ├── git.sh
+│   │   ├── gpg.sh
+│   │   ├── hardware
+│   │   │   ├── bluetooth.sh
+│   │   │   ├── fix-fkeys.sh
+│   │   │   ├── ignore-power-button.sh
+│   │   │   ├── network.sh
+│   │   │   ├── nvidia.sh
+│   │   │   ├── printer.sh
+│   │   │   └── usb-autosuspend.sh
+│   │   ├── increase-lockout-limit.sh
+│   │   ├── increase-sudo-tries.sh
+│   │   ├── localdb.sh
+│   │   ├── mimetypes.sh
+│   │   ├── mise-ruby.sh
+│   │   ├── ssh-flakiness.sh
+│   │   ├── theme.sh
+│   │   ├── timezones.sh
+│   │   └── xcompose.sh
+│   ├── first-run
+│   │   ├── battery-monitor.sh
+│   │   └── firewall.sh
+│   ├── login
+│   │   ├── alt-bootloaders.sh
+│   │   ├── limine-snapper.sh
+│   │   └── plymouth.sh
+│   ├── packages.ignored
+│   ├── packages.pinned
+│   ├── packages.sh
+│   ├── packaging
+│   │   ├── asdcontrol.sh
+│   │   ├── fonts.sh
+│   │   ├── lazyvim.sh
+│   │   ├── pins.sh
+│   │   ├── tuis.sh
+│   │   └── webapps.sh
+│   └── preflight
+│       ├── chroot.sh
+│       ├── first-run-mode.sh
+│       ├── guard.sh
+│       ├── migrations.sh
+│       ├── repositories.sh
+│       ├── show-env.sh
+│       └── trap-errors.sh
+├── install.sh
+├── LICENSE
+├── logo.svg
+├── logo.txt
+├── migrations
+│   ├── 1751134560.sh
+│   ├── 1751134561.sh
+│   ├── 1751134568.sh
+│   ├── 1751135253.sh
+│   ├── 1751225707.sh
+│   ├── 1751510848.sh
+│   ├── 1751667620.sh
+│   ├── 1751669258.sh
+│   ├── 1751672984.sh
+│   ├── 1751679069.sh
+│   ├── 1751821819.sh
+│   ├── 1751887718.sh
+│   ├── 1752081088.sh
+│   ├── 1752082381.sh
+│   ├── 1752091783.sh
+│   ├── 1752104271.sh
+│   ├── 1752153188.sh
+│   ├── 1752168292.sh
+│   ├── 1752188554.sh
+│   ├── 1752251002.sh
+│   ├── 1752292967.sh
+│   ├── 1752365998.sh
+│   ├── 1752535084.sh
+│   ├── 1752535341.sh
+│   ├── 1752543801.sh
+│   ├── 1752643269.sh
+│   ├── 1752678932.sh
+│   ├── 1752725616.sh
+│   ├── 1752793122.sh
+│   ├── 1752797704.sh
+│   ├── 1752874371.sh
+│   ├── 1752885858.sh
+│   ├── 1752896442.sh
+│   ├── 1752897642.sh
+│   ├── 1752899588.sh
+│   ├── 1752955912.sh
+│   ├── 1752981883.sh
+│   ├── 1753062084.sh
+│   ├── 1753138691.sh
+│   ├── 1753176520.sh
+│   ├── 1753224615.sh
+│   ├── 1753286633.sh
+│   ├── 1753302134.sh
+│   ├── 1753352057.sh
+│   ├── 1753468218.sh
+│   ├── 1753495989.sh
+│   ├── 1753558374.sh
+│   ├── 1753683888.sh
+│   ├── 1753689791.sh
+│   ├── 1753908454.sh
+│   ├── 1753998861.sh
+│   ├── 1754047941.sh
+│   ├── 1754108993.sh
+│   ├── 1754109724.sh
+│   ├── 1754113760.sh
+│   ├── 1754133148.sh
+│   ├── 1754136581.sh
+│   ├── 1754208139.sh
+│   ├── 1754215439.sh
+│   ├── 1754215533.sh
+│   ├── 1754221967.sh
+│   ├── 1754228071.sh
+│   ├── 1754228679.sh
+│   ├── 1754265453.sh
+│   ├── 1754302123.sh
+│   ├── 1754305112.sh
+│   ├── 1754331529.sh
+│   ├── 1754332200.sh
+│   ├── 1754389057.sh
+│   ├── 1754390772.sh
+│   ├── 1754509222.sh
+│   ├── 1754514972.sh
+│   ├── 1754515289.sh
+│   ├── 1754566681.sh
+│   ├── 1754568612.sh
+│   ├── 1754652760.sh
+│   ├── 1754666868.sh
+│   ├── 1754668999.sh
+│   ├── 1754679822.sh
+│   ├── 1754828680.sh
+│   ├── 1754856741.sh
+│   ├── 1754860578.sh
+│   ├── 1754919057.sh
+│   ├── 1754929475.sh
+│   ├── 1754929737.sh
+│   ├── 1754984623.sh
+│   ├── 1754984734.sh
+│   ├── 1754996869.sh
+│   ├── 1755109182.sh
+│   ├── 1755139080.sh
+│   ├── 1755164105.sh
+│   ├── 1755208929.sh
+│   ├── 1755340533.sh
+│   ├── 1755436367.sh
+│   ├── 1755455095.sh
+│   ├── 1755459930.sh
+│   ├── 1755494432.sh
+│   ├── 1755507891.sh
+│   ├── 1755512354.sh
+│   ├── 1755527220.sh
+│   ├── 1755548643.sh
+│   ├── 1755795450.sh
+│   ├── 1755865046.sh
+│   ├── 1755867743.sh
+│   ├── 1755870033.sh
+│   ├── 1755878717.sh
+│   ├── 1755904244.sh
+│   ├── 1755920552.sh
+│   ├── 1755930114.sh
+│   ├── 1756060611.sh
+│   ├── 1756062808.sh
+│   ├── 1756115364.sh
+│   ├── 1756153445.sh
+│   ├── 1756203383.sh
+│   ├── 1756300740.sh
+│   ├── 1756360551.sh
+│   ├── 1756363651.sh
+│   └── 1756371020.sh
+├── README.md
+└── themes
+    ├── catppuccin
+    │   ├── alacritty.toml
+    │   ├── backgrounds
+    │   │   ├── 1-catppuccin.png
+    │   │   ├── 2-cat-waves-mocha.png
+    │   │   └── 3-cat-blue-eye-mocha.png
+    │   ├── btop.theme
+    │   ├── chromium.theme
+    │   ├── hyprland.conf
+    │   ├── hyprlock.conf
+    │   ├── icons.theme
+    │   ├── mako.ini
+    │   ├── neovim.lua
+    │   ├── swayosd.css
+    │   ├── walker.css
+    │   └── waybar.css
+    ├── catppuccin-latte
+    │   ├── alacritty.toml
+    │   ├── backgrounds
+    │   │   └── 1-catppuccin-latte.png
+    │   ├── btop.theme
+    │   ├── chromium.theme
+    │   ├── hyprland.conf
+    │   ├── hyprlock.conf
+    │   ├── icons.theme
+    │   ├── light.mode
+    │   ├── mako.ini
+    │   ├── neovim.lua
+    │   ├── swayosd.css
+    │   ├── walker.css
+    │   └── waybar.css
+    ├── everforest
+    │   ├── alacritty.toml
+    │   ├── backgrounds
+    │   │   └── 1-everforest.jpg
+    │   ├── btop.theme
+    │   ├── chromium.theme
+    │   ├── hyprland.conf
+    │   ├── hyprlock.conf
+    │   ├── icons.theme
+    │   ├── mako.ini
+    │   ├── neovim.lua
+    │   ├── swayosd.css
+    │   ├── walker.css
+    │   └── waybar.css
+    ├── gruvbox
+    │   ├── alacritty.toml
+    │   ├── backgrounds
+    │   │   └── 1-grubox.jpg
+    │   ├── btop.theme
+    │   ├── chromium.theme
+    │   ├── hyprland.conf
+    │   ├── hyprlock.conf
+    │   ├── icons.theme
+    │   ├── mako.ini
+    │   ├── neovim.lua
+    │   ├── swayosd.css
+    │   ├── walker.css
+    │   └── waybar.css
+    ├── kanagawa
+    │   ├── alacritty.toml
+    │   ├── backgrounds
+    │   │   └── 1-kanagawa.jpg
+    │   ├── btop.theme
+    │   ├── chromium.theme
+    │   ├── hyprland.conf
+    │   ├── hyprlock.conf
+    │   ├── icons.theme
+    │   ├── mako.ini
+    │   ├── neovim.lua
+    │   ├── swayosd.css
+    │   ├── walker.css
+    │   └── waybar.css
+    ├── matte-black
+    │   ├── alacritty.toml
+    │   ├── backgrounds
+    │   │   └── 1-matte-black.jpg
+    │   ├── btop.theme
+    │   ├── chromium.theme
+    │   ├── hyprland.conf
+    │   ├── hyprlock.conf
+    │   ├── icons.theme
+    │   ├── mako.ini
+    │   ├── neovim.lua
+    │   ├── swayosd.css
+    │   ├── walker.css
+    │   └── waybar.css
+    ├── nord
+    │   ├── alacritty.toml
+    │   ├── backgrounds
+    │   │   ├── 1-nord.png
+    │   │   └── 2-nord.png
+    │   ├── btop.theme
+    │   ├── chromium.theme
+    │   ├── hyprland.conf
+    │   ├── hyprlock.conf
+    │   ├── icons.theme
+    │   ├── mako.ini
+    │   ├── neovim.lua
+    │   ├── swayosd.css
+    │   ├── walker.css
+    │   └── waybar.css
+    ├── osaka-jade
+    │   ├── alacritty.toml
+    │   ├── backgrounds
+    │   │   ├── 1-osaka-jade-bg.jpg
+    │   │   ├── 2-osaka-jade-bg.jpg
+    │   │   └── 3-osaka-jade-bg.jpg
+    │   ├── btop.theme
+    │   ├── chromium.theme
+    │   ├── hyprland.conf
+    │   ├── hyprlock.conf
+    │   ├── icons.theme
+    │   ├── mako.ini
+    │   ├── neovim.lua
+    │   ├── swayosd.css
+    │   ├── walker.css
+    │   └── waybar.css
+    ├── ristretto
+    │   ├── alacritty.toml
+    │   ├── backgrounds
+    │   │   ├── 1-ristretto.jpg
+    │   │   ├── 2-ristretto.jpg
+    │   │   └── 3-ristretto.jpg
+    │   ├── btop.theme
+    │   ├── chromium.theme
+    │   ├── hyprland.conf
+    │   ├── hyprlock.conf
+    │   ├── icons.theme
+    │   ├── mako.ini
+    │   ├── neovim.lua
+    │   ├── swayosd.css
+    │   ├── walker.css
+    │   └── waybar.css
+    ├── rose-pine
+    │   ├── alacritty.toml
+    │   ├── backgrounds
+    │   │   ├── 1-rose-pine.jpg
+    │   │   ├── 2-wave-light.png
+    │   │   └── 3-leafy-dawn-osvmarchi.png
+    │   ├── btop.theme
+    │   ├── chromium.theme
+    │   ├── hyprland.conf
+    │   ├── hyprlock.conf
+    │   ├── icons.theme
+    │   ├── light.mode
+    │   ├── mako.ini
+    │   ├── neovim.lua
+    │   ├── swayosd.css
+    │   ├── walker.css
+    │   └── waybar.css
+    └── tokyo-night
+        ├── alacritty.toml
+        ├── backgrounds
+        │   ├── 1-scenery-pink-lakeside-sunset-lake-landscape-scenic-panorama-7680x3215-144.png
+        │   ├── 2-Pawel-Czerwinski-Abstract-Purple-Blue.jpg
+        │   └── 3-Milad-Fakurian-Abstract-Purple-Blue.jpg
+        ├── btop.theme
+        ├── chromium.theme
+        ├── hyprland.conf
+        ├── hyprlock.conf
+        ├── icons.theme
+        ├── mako.ini
+        ├── neovim.lua
+        ├── swayosd.css
+        ├── walker.css
+        └── waybar.css
+
+76 directories, 517 files
